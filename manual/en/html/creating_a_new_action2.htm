@@ -1,6 +1,5 @@
-﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+﻿<!DOCTYPE HTML>
 <html>
-<!-- saved from url=(0029)http://www.helpandmanual.com/ -->
 <head>
    <title>Forms &amp; Actions &gt; Forms - Recipient management &gt; Forms &gt; Example form: Opt-in &gt; Creating a new action</title>
    <meta name="generator" content="Help & Manual">
@@ -74,19 +73,19 @@ function toggleToggles() {
 .topichead { padding: 5px 5px 20px 5px; }
 -->
 </style>   
-<script type="text/javascript" src="helpman_topicinit.js"></script>
-<!-- Redirect browser to frame page if page is not in the content frame. -->
-<script type="text/javascript">
-<!--
-if (location.search.lastIndexOf("toc=0")<=0) {
-  if (parent.frames.length==0) { parent.location.href="index.html?creating_a_new_action2.htm"; }
-  else { parent.quicksync('a8.1.2.4.1'); }
-}
-//-->
-</script>
-<script type="text/javascript" src="highlight.js"></script></head>
-<body onload="highlight();">
-<div id="hmpopupDiv" style="visibility:hidden; position:absolute; z-index:1000; "></div>
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <script type="text/javascript">
+     HMSyncTOC("index.html", "creating_a_new_action2.htm");
+   </script>
+   <script type="text/javascript" src="highlight.js"></script>
+   <script type="text/javascript">
+     $(document).ready(function(){highlight();});
+   </script>
+</head>
+<body>
 <!--ZOOMSTOP-->
 
 <div id="idheader">
@@ -94,18 +93,18 @@ if (location.search.lastIndexOf("toc=0")<=0) {
   <tr>
     <td align="left" class="topichead">
       <p class="crumbs" id="idnav">
-        <a href="sites__actions.htm">Forms &amp; Actions</a> &gt; <a href="forms___recipient_management.htm">Forms - Recipient management</a> &gt; <a href="forms.htm">Forms</a> &gt; <a href="example_opt_in_form.htm">Example form: Opt-in</a>&nbsp;&gt;&nbsp;Creating a new action    
+        <a href="sites__actions.htm">Forms &amp; Actions</a> &gt; <a href="forms_-_recipient_management.htm">Forms - Recipient management</a> &gt; <a href="forms.htm">Forms</a> &gt; <a href="example_opt-in_form.htm">Example form: Opt-in</a>&nbsp;&gt;&nbsp;Creating a new action    
       </p>
     </td>
     <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
         
         
-          <a href="example_opt_in_form.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <a href="example_opt-in_form.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
           <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
           </a>
         
         
-        <a href="example_opt_in_form.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <a href="example_opt-in_form.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
         <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
         </a>
         
@@ -127,11 +126,11 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 <div id="idcontent">
   <div id="innerdiv"> 
-  <p class="p_Heading5"><span class="f_Heading5">Creating a new action</span></p>
+  <h5 class="p_Heading5"><span class="f_Heading5">Creating a new action</span></h5>
 
   <!--ZOOMRESTART-->
   <p>To start with, you will define a new action which enters new data into the recipients database and saves them. The data will be required in the second form.</p>
-<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">1.</span></td><td><span class="f_Zahlen">The </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Name</span><span class="f_Zahlen"> of the action should be self-explanatory, for instance </span><span class="f_Zahlen" style="font-style: italic;">Save customer record</span><span class="f_Zahlen">. Select </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Subscribe</span><span class="f_Zahlen"> from the </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Type</span><span class="f_Zahlen"> drop-down list. To conclude your entries, click on the </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Save</span><span class="f_Zahlen"> button.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">2.</span></td><td><span class="f_Zahlen">The OpenEMM will now display the subscribe command as a first step of the new action, together with fields for further options. Do not check </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Use double opt-in</span><span class="f_Zahlen"> for the time being. The next section will give a more detailed explanation of that topic. You should, however, activate </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Check for duplicate records</span><span class="f_Zahlen"> by checking the check box. This will prevent duplicate entries in your database. This option is explained in greater detail in chapter "<a href="creating_a_new_action.htm">Creating a new action</a>".</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">3.</span></td><td><span class="f_Zahlen">This concludes entries for the action in question.</span></td></tr></table></div><div class="p_ImageCaption"><div style="margin:0 auto;width:938px;padding:0px"><img src="the_finished_action_which_will.png" width="938" height="455" border="0" alt="Fig. 8.9: The finished action which will save customer data for the new subscriber."><p style="text-align:center"><span class="f_ImageCaption">Fig. 8.9: The finished action which will save customer data for the new subscriber.</span></p></div></div>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="border:none;border-spacing:0px;padding:0px;line-height: normal;"><tr valign="baseline" style="vertical-align:baseline"><td style="border:none;width:16px"><span style="font-size:11pt; font-family: 'Arial';color:#000000;">1.</span></td><td style="border:none"><span class="f_Zahlen">The </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Name</span><span class="f_Zahlen"> of the action should be self-explanatory, for instance </span><span class="f_Zahlen" style="font-style: italic;">Save customer record</span><span class="f_Zahlen">. Select </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Subscribe</span><span class="f_Zahlen"> from the </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Type</span><span class="f_Zahlen"> drop-down list. To conclude your entries, click on the </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Save</span><span class="f_Zahlen"> button.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="border:none;border-spacing:0px;padding:0px;line-height: normal;"><tr valign="baseline" style="vertical-align:baseline"><td style="border:none;width:16px"><span style="font-size:11pt; font-family: 'Arial';color:#000000;">2.</span></td><td style="border:none"><span class="f_Zahlen">The OpenEMM will now display the subscribe command as a first step of the new action, together with fields for further options. Do not check </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Use double opt-in</span><span class="f_Zahlen"> for the time being. The next section will give a more detailed explanation of that topic. You should, however, activate </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Check for duplicate records</span><span class="f_Zahlen"> by checking the check box. This will prevent duplicate entries in your database. This option is explained in greater detail in chapter <a href="creating_a_new_action.htm" class="topiclink">Creating a new action</a>.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="border:none;border-spacing:0px;padding:0px;line-height: normal;"><tr valign="baseline" style="vertical-align:baseline"><td style="border:none;width:16px"><span style="font-size:11pt; font-family: 'Arial';color:#000000;">3.</span></td><td style="border:none"><span class="f_Zahlen">This concludes entries for the action in question.</span></td></tr></table></div><div class="p_ImageCaption"><div style="margin:0px auto 0px auto;width:936px;padding:0px 0px 0px 0px"><img src="the_finished_action_which_will.png" width="936" height="485" style="border:none" alt="Fig. 8.9: The finished action which will save customer data for the new subscriber." title="Fig. 8.9: The finished action which will save customer data for the new subscriber." /><p style="text-align:center"><span class="f_ImageCaption">Fig. 8.9: The finished action which will save customer data for the new subscriber.</span></p></div></div>
 
   <!--ZOOMSTOP-->
   </div>

@@ -1,24 +1,33 @@
 package org.agnitas.emm.core.autoexport.service;
 
-import com.jcraft.jsch.ChannelSftp;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.List;
+import java.util.Locale;
 
-import org.agnitas.beans.*;
+import org.agnitas.beans.Admin;
+import org.agnitas.beans.ExportPredef;
 import org.agnitas.dao.AdminDao;
 import org.agnitas.dao.ExportPredefDao;
 import org.agnitas.emm.core.autoexport.bean.AutoExport;
 import org.agnitas.emm.core.autoexport.dao.AutoExportDao;
 import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.agnitas.util.AgnUtils;
+import org.agnitas.util.FtpHelper;
 import org.agnitas.util.SFtpHelper;
 import org.agnitas.util.SafeString;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.springframework.context.ApplicationContext;
 
-import java.io.*;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import com.jcraft.jsch.ChannelSftp;
 
 public class AutoExportService {
 
@@ -43,7 +52,18 @@ public class AutoExportService {
         ExportPredef exportProfile = exportPredefDao.get(autoExport.getExportProfileId(), companyId);
         String autoExportInfo = generateAutoExportInfoForReportMail(autoExport, exportProfile, admin.getLocale());
         File exportFile = exportWizardService.createExportFile(autoExport, exportProfile, companyId);
-        SFtpHelper sFtpHelper = null;
+        if (autoExport.getFileServer().toLowerCase().startsWith("ftp://")) {
+        	// if configured so, send via FTP
+        	uploadViaFtp(autoExport, admin, autoExportInfo, exportFile);
+        } else {
+        	// default: send via SFTP
+        	uploadViaSftp(autoExport, admin, autoExportInfo, exportFile);
+        }
+    }
+
+	private void uploadViaSftp(AutoExport autoExport, Admin admin, String autoExportInfo, File exportFile) {
+		SFtpHelper sFtpHelper = null;
+        boolean errorOccured = false;
         InputStream inputStream = null;
         OutputStream out = null;
         try {
@@ -73,6 +93,7 @@ public class AutoExportService {
             saveAutoExport(autoExport);
 
         } catch (Exception ex) {
+        	errorOccured = true;
             String errorMail = SafeString.getLocaleString("autoExport.error.reason", admin.getLocale()) + ": " +
                     ex.getMessage() + "\n\n" + autoExportInfo;
             AgnUtils.sendEmail(AgnUtils.getDefaultValue("export.report.from.address"), AgnUtils.getDefaultValue("export.report.to.address"),
@@ -84,8 +105,69 @@ public class AutoExportService {
             }
             IOUtils.closeQuietly(out);
             IOUtils.closeQuietly(inputStream);
+            
+            if (!errorOccured && exportFile != null && exportFile.exists()) {
+        		try {
+        			exportFile.delete();
+				} catch (Exception e) {
+					logger.error("Cannot delete temporary export file: " + exportFile.getAbsolutePath(), e);
+				}
+        	}
         }
-    }
+	}
+
+	private void uploadViaFtp(AutoExport autoExport, Admin admin, String autoExportInfo, File exportFile) {
+		FtpHelper ftpHelper = null;
+        boolean errorOccured = false;
+        InputStream inputStream = null;
+        OutputStream out = null;
+        try {
+			try {
+				ftpHelper = new FtpHelper(autoExport.getFileServer());
+				ftpHelper.connect();
+			} catch (Exception e) {
+				throw new Exception("Cannot connect to ftp server", e);
+			}
+
+			if (!ftpHelper.exists(autoExport.getFilePath())) {
+				throw new Exception("Directory not found on ftp server");
+			}
+            
+            try {
+				inputStream = new FileInputStream(exportFile);
+				String slash = autoExport.getFilePath().lastIndexOf("/") == autoExport.getFilePath().length() - 1 ? "" : "/";
+				ftpHelper.put(inputStream, autoExport.getFilePath() + slash + exportFile.getName());
+				ftpHelper.close();
+			} catch (Exception e) {
+				throw new Exception("Cannot write file to ftp server", e);
+			}
+
+            // save flag that this export was executed
+            autoExport.setExecuted(true);
+            saveAutoExport(autoExport);
+
+        } catch (Exception ex) {
+        	errorOccured = true;
+            String errorMail = SafeString.getLocaleString("autoExport.error.reason", admin.getLocale()) + ": " + ex.getMessage() + "\n\n" + autoExportInfo;
+            AgnUtils.sendEmail(AgnUtils.getDefaultValue("export.report.from.address"), AgnUtils.getDefaultValue("export.report.to.address"),
+                    SafeString.getLocaleString("autoExport.error", admin.getLocale()), errorMail, errorMail, 0, "UTF-8");
+            logger.error("Auto Export - error while transferring file to ftp", ex);
+        } finally {
+            if (ftpHelper != null) {
+                ftpHelper.close();
+            }
+            IOUtils.closeQuietly(out);
+            IOUtils.closeQuietly(inputStream);
+            
+            if (!errorOccured && exportFile != null && exportFile.exists()) {
+        		try {
+        			exportFile.delete();
+				} catch (Exception e) {
+					logger.error("Cannot delete temporary export file: " + exportFile.getAbsolutePath(), e);
+				}
+        	}
+        }
+	}
 
     public void setAutoActivationDateAndActivate(@VelocityCheck int companyId, int autoExportId, Date date) {
         AutoExport autoExport = autoExportDao.getAutoExport(autoExportId, companyId);

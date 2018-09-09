@@ -1047,4 +1047,11 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
 		
 		return template.query( "SELECT company_id, mailing_id, shortname, description FROM mailing_tbl WHERE company_id=? AND deleted=0 AND is_template=0", rm, companyID);
 	}
+
+	@Override
+	public void deleteContent(int contentID) {
+		JdbcTemplate template = new JdbcTemplate(getDataSource());
+
+		template.update("DELETE FROM dyn_content_tbl WHERE dyn_content_id=?", contentID);
+	}
 }

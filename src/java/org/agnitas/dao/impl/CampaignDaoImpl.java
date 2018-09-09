@@ -303,7 +303,7 @@ public class CampaignDaoImpl implements CampaignDao {
     }
 
     private CampaignStats loadOpenedMails (CampaignStats stats, Campaign campaign, Target aTarget, boolean useMailtracking, String mailingSelection) {
-JdbcTemplate jdbc = getJdbcTemplate();
+    	JdbcTemplate jdbc = getJdbcTemplate();
     	CampaignStatEntry aktEntry = null;
     	String sql = "select onepix.mailing_id as mailing_id, count(onepix.customer_id) as amount from onepixel_log_tbl onepix";
         if(useMailtracking && aTarget != null && aTarget.getId() != 0)
@@ -341,7 +341,7 @@ JdbcTemplate jdbc = getJdbcTemplate();
                 }
             }
         } catch (Exception e) {
-        	logger.error( "OnePixelQueryByCust error1: " + e.getMessage(), e);
+        	logger.error("OnePixelQueryByCust error1: " + sql + "\n" + e.getMessage(), e);
         	AgnUtils.sendExceptionMail("sql:" + sql, e);
         }
         return stats;

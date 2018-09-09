@@ -1,6 +1,5 @@
-﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+﻿<!DOCTYPE HTML>
 <html>
-<!-- saved from url=(0029)http://www.helpandmanual.com/ -->
 <head>
    <title>Content Manager &gt; Content modules &gt; CM categories</title>
    <meta name="generator" content="Help & Manual">
@@ -74,19 +73,19 @@ function toggleToggles() {
 .topichead { padding: 5px 5px 20px 5px; }
 -->
 </style>   
-<script type="text/javascript" src="helpman_topicinit.js"></script>
-<!-- Redirect browser to frame page if page is not in the content frame. -->
-<script type="text/javascript">
-<!--
-if (location.search.lastIndexOf("toc=0")<=0) {
-  if (parent.frames.length==0) { parent.location.href="index.html?cm_categories.htm"; }
-  else { parent.quicksync('a9.3.6'); }
-}
-//-->
-</script>
-<script type="text/javascript" src="highlight.js"></script></head>
-<body onload="highlight();">
-<div id="hmpopupDiv" style="visibility:hidden; position:absolute; z-index:1000; "></div>
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <script type="text/javascript">
+     HMSyncTOC("index.html", "cm_categories.htm");
+   </script>
+   <script type="text/javascript" src="highlight.js"></script>
+   <script type="text/javascript">
+     $(document).ready(function(){highlight();});
+   </script>
+</head>
+<body>
 <!--ZOOMSTOP-->
 
 <div id="idheader">
@@ -127,12 +126,12 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 <div id="idcontent">
   <div id="innerdiv"> 
-  <p class="p_Heading3"><span class="f_Heading3">CM categories</span></p>
+  <h3 class="p_Heading3"><span class="f_Heading3">CM categories</span></h3>
 
   <!--ZOOMRESTART-->
   <p>The Content manager offers you the possibility of assigning each content module to a category defined by you. This is, on one hand, particularly useful when you work with many different Content modules and want to organize this collection to give a better overview. On the other, the ability to select the category means you can quickly find the Content module when you are creating a new mailing and need a specific boilerplate.</p>
 <p>In order to call the CM categories, click on <span style="font-weight: bold; color: #006fb9;">Mailings</span> and <span style="font-weight: bold; color: #006fb9;">Content manager</span> in the main menu and then on <span style="font-weight: bold; color: #006fb9;">Module categories</span>. OpenEMM now lists an overview of all available CM categories.</p>
-<div class="p_ImageCaption"><div style="margin:0 auto;width:935px;padding:0px"><img src="produktname_lists_all_available_cm.png" width="935" height="248" border="0" alt="Fig. 10.14:OpenEMM lists all available CM categories."><p style="text-align:center"><span class="f_ImageCaption">Fig. 10.14:OpenEMM lists all available CM categories.</span></p></div></div>
+<div class="p_ImageCaption"><div style="margin:0px auto 0px auto;width:935px;padding:0px 0px 0px 0px"><img src="produktname_lists_all_available_cm.png" width="935" height="248" style="border:none" alt="Fig. 9.14:OpenEMM lists all available CM categories." title="Fig. 9.14:OpenEMM lists all available CM categories." /><p style="text-align:center"><span class="f_ImageCaption">Fig. 9.14:OpenEMM lists all available CM categories.</span></p></div></div>
 <p>The option <span style="font-weight: bold; color: #006fb9;">List size</span> defines how many entries should appear in the list. This is preset to <span style="font-weight: bold; color: #006fb9;">20</span> entries, which you can alternatively extend to <span style="font-weight: bold; color: #006fb9;">50</span> or <span style="font-weight: bold; color: #006fb9;">100</span> entries. Clicking on the <span style="font-weight: bold; color: #006fb9;">Show</span> button accepts this setting.</p>
 <p>The table shows several items of information for each CM category. On the very left is the <span style="font-weight: bold; color: #006fb9;">Name</span>, then the <span style="font-weight: bold; color: #006fb9;">Description</span>. On the right in every column, you will see two symbols that allow you to delete or edit the CM category.</p>
 

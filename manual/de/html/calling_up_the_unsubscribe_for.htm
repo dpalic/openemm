@@ -1,8 +1,7 @@
-﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+﻿<!DOCTYPE HTML>
 <html>
-<!-- saved from url=(0029)http://www.helpandmanual.com/ -->
 <head>
-   <title>Formulare &amp; Aktionen &gt; Formular - Selbstverwaltung für Empfänger &gt; Formulare &gt; Beispiel Formular: Abmeldung &gt; Abmeldeformular aufrufen</title>
+   <title>Sites &amp; Actions &gt; Formular - Selbstverwaltung für Empfänger &gt; Formulare &gt; Beispiel Formular: Abmeldung &gt; Abmeldeformular aufrufen</title>
    <meta name="generator" content="Help & Manual">
    <meta name="keywords" content="">
    <meta name="description" content="Abmeldeformular aufrufen">
@@ -74,19 +73,19 @@ function toggleToggles() {
 .topichead { padding: 5px 5px 20px 5px; }
 -->
 </style>   
-<script type="text/javascript" src="helpman_topicinit.js"></script>
-<!-- Redirect browser to frame page if page is not in the content frame. -->
-<script type="text/javascript">
-<!--
-if (location.search.lastIndexOf("toc=0")<=0) {
-  if (parent.frames.length==0) { parent.location.href="index.html?calling_up_the_unsubscribe_for.htm"; }
-  else { parent.quicksync('a8.1.2.7.3'); }
-}
-//-->
-</script>
-<script type="text/javascript" src="highlight.js"></script></head>
-<body onload="highlight();">
-<div id="hmpopupDiv" style="visibility:hidden; position:absolute; z-index:1000; "></div>
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <script type="text/javascript">
+     HMSyncTOC("index.html", "calling_up_the_unsubscribe_for.htm");
+   </script>
+   <script type="text/javascript" src="highlight.js"></script>
+   <script type="text/javascript">
+     $(document).ready(function(){highlight();});
+   </script>
+</head>
+<body>
 <!--ZOOMSTOP-->
 
 <div id="idheader">
@@ -94,7 +93,7 @@ if (location.search.lastIndexOf("toc=0")<=0) {
   <tr>
     <td align="left" class="topichead">
       <p class="crumbs" id="idnav">
-        <a href="sites__actions.htm">Formulare &amp; Aktionen</a> &gt; <a href="forms___recipient_management.htm">Formular - Selbstverwaltung für Empfänger</a> &gt; <a href="forms.htm">Formulare</a> &gt; <a href="example_form_for_unsubscribing.htm">Beispiel Formular: Abmeldung</a>&nbsp;&gt;&nbsp;Abmeldeformular aufrufen    
+        <a href="sites__actions.htm">Sites &amp; Actions</a> &gt; <a href="forms_-_recipient_management.htm">Formular - Selbstverwaltung für Empfänger</a> &gt; <a href="forms.htm">Formulare</a> &gt; <a href="example_form_for_unsubscribing.htm">Beispiel Formular: Abmeldung</a>&nbsp;&gt;&nbsp;Abmeldeformular aufrufen    
       </p>
     </td>
     <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
@@ -127,13 +126,13 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 <div id="idcontent">
   <div id="innerdiv"> 
-  <p class="p_Heading5"><span class="f_Heading5">Abmeldeformular aufrufen</span></p>
+  <h5 class="p_Heading5"><span class="f_Heading5">Abmeldeformular aufrufen</span></h5>
 
   <!--ZOOMRESTART-->
   <p>Der Aufruf des Formulars mit der Sicherheitsabfrage erfolgt über ein Mailing. In diesem Mailing tragen Sie einen personalisierten Link nach folgendem Schema ein:</p>
 <p class="p_BeispieltextQuelltext"><span class="f_BeispieltextQuelltext">http://company.openemm.org/form.do?agnCI=1&amp;agnFN=AbmeldenFrage&amp;agnUID=##AGNUID##</span></p>
 <p>Sie müssen immer <span style="font-style: italic;">1</span> als Wert für <span style="font-style: italic;">agnCI</span> in OpenEMM eingeben. Außerdem muss hinter <span style="font-style: italic;">agnFN=</span> der Name des ersten Formulars mit der Sicherheitsabfrage folgen, im Beispiel <span style="font-style: italic;">AbmeldenFrage, </span>und der Link als messbar markiert sein.</p>
-<div class="p_ImageCaption"><div style="margin:0 auto;width:338px;padding:0px"><img src="das_einfache_html-formular_mit_der.png" width="338" height="154" border="0" alt="Abb. 9.19: Das einfache HTML-Formular mit der Sicherheitsabfrage aus dem Beispiel."><p style="text-align:center"><span class="f_ImageCaption">Abb. 9.19: Das einfache HTML-Formular mit der Sicherheitsabfrage aus dem Beispiel.</span></p></div></div>
+<div class="p_ImageCaption"><div style="margin:0px auto 0px auto;width:338px;padding:0px 0px 0px 0px"><img src="das_einfache_html-formular_mit_der.png" width="338" height="154" style="border:none" alt="Abb. 8.19: Das einfache HTML-Formular mit der Sicherheitsabfrage aus dem Beispiel." title="Abb. 8.19: Das einfache HTML-Formular mit der Sicherheitsabfrage aus dem Beispiel." /><p style="text-align:center"><span class="f_ImageCaption">Abb. 8.19: Das einfache HTML-Formular mit der Sicherheitsabfrage aus dem Beispiel.</span></p></div></div>
 <p><span style="font-weight: bold;">Achtung:</span> Wenn die Abmeldung von der Mailing-Liste erfolgt ist, funktioniert der Link zum Abmelden nicht mehr. Denn der Empfänger ist zwar noch in der Datenbank vorhanden, das System zeigt ihn aber aus Sicherheitsgründen nicht mehr an. Deshalb ist auch die Empfänger-ID (<span style="font-style: italic;">agnUID</span>) nicht mehr gültig. Und diese ist wiederum im personalisierten Link zur Abmeldung enthalten. Über die Administratoroberfläche des OpenEMM können Sie den Empfänger aber weiterhin in der Datenbank aufrufen.</p>
 
   <!--ZOOMSTOP-->

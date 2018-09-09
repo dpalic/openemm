@@ -429,7 +429,7 @@ public class MailingWizardAction extends StrutsDispatchActionBase {
 
 		param.setSubject(aForm.getEmailSubject());
 		aForm.getMailing().buildDependencies(true,
-				getApplicationContext(req));
+				getApplicationContext(req), false);
 
         prepareTargetPage(req);
 		return mapping.findForward("next");
@@ -630,7 +630,7 @@ public class MailingWizardAction extends StrutsDispatchActionBase {
 			dynTag.setCompanyID(mailing.getCompanyID());
 
 			mailing.cleanupTrackableLinks(new Vector<String>());
-			mailing.buildDependencies(true, getApplicationContext(req));
+			mailing.buildDependencies(true, getApplicationContext(req), false);
 			if (aForm.getDynName() != null
 					&& aForm.getDynName().trim().length() != 0) {
 				Iterator<String> it = mailing.getDynTags().keySet().iterator();

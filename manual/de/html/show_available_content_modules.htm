@@ -1,6 +1,5 @@
-﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+﻿<!DOCTYPE HTML>
 <html>
-<!-- saved from url=(0029)http://www.helpandmanual.com/ -->
 <head>
    <title>Content Manager &gt; Content-Module &gt; Vorhandene Content-Module anzeigen</title>
    <meta name="generator" content="Help & Manual">
@@ -74,19 +73,19 @@ function toggleToggles() {
 .topichead { padding: 5px 5px 20px 5px; }
 -->
 </style>   
-<script type="text/javascript" src="helpman_topicinit.js"></script>
-<!-- Redirect browser to frame page if page is not in the content frame. -->
-<script type="text/javascript">
-<!--
-if (location.search.lastIndexOf("toc=0")<=0) {
-  if (parent.frames.length==0) { parent.location.href="index.html?show_available_content_modules.htm"; }
-  else { parent.quicksync('a9.3.1'); }
-}
-//-->
-</script>
-<script type="text/javascript" src="highlight.js"></script></head>
-<body onload="highlight();">
-<div id="hmpopupDiv" style="visibility:hidden; position:absolute; z-index:1000; "></div>
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <script type="text/javascript">
+     HMSyncTOC("index.html", "show_available_content_modules.htm");
+   </script>
+   <script type="text/javascript" src="highlight.js"></script>
+   <script type="text/javascript">
+     $(document).ready(function(){highlight();});
+   </script>
+</head>
+<body>
 <!--ZOOMSTOP-->
 
 <div id="idheader">
@@ -127,15 +126,15 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 <div id="idcontent">
   <div id="innerdiv"> 
-  <p class="p_Heading3"><span class="f_Heading3">Vorhandene Content-Module anzeigen</span></p>
+  <h3 class="p_Heading3"><span class="f_Heading3">Vorhandene Content-Module anzeigen</span></h3>
 
   <!--ZOOMRESTART-->
   <p>Einen Überblick über die vorhandenen Content-Module erhalten Sie, indem Sie in der Navigationsleiste auf den Eintrag <span style="font-weight: bold; color: #006fb9;">Mailings</span> und dann <span style="font-weight: bold; color: #006fb9;">Content Manager</span> klicken und anschließend den Seitenreiter <span style="font-weight: bold; color: #006fb9;">Content-Module</span> wählen. Der OpenEMM listet auf der folgenden Seite die vorhandenen Content-Module auf.</p>
 <p>Wollen Sie nur die Content-Module einer bestimmten Kategorie sehen, filtern Sie Ihre Auswahl über den Menüpunkt <span style="font-weight: bold; color: #006fb9;">Kategorie</span>.</p>
-<p><span style="font-weight: bold;">Bitte beachten Sie:</span> Wenn Sie noch kein Content-Modul einer Kategorie zugewiesen haben, können Sie diese Option nicht zuschalten. In Kapitel <a href="cm_categories.htm">CM-Kategorien</a>. lesen Sie, wie Sie Content-Module nach Kategorien sortieren können.</p>
+<p><span style="font-weight: bold;">Bitte beachten Sie:</span> Wenn Sie noch kein Content-Modul einer Kategorie zugewiesen haben, können Sie diese Option nicht zuschalten. In Kapitel <a href="cm_categories.htm" class="topiclink">CM-Kategorien</a>. lesen Sie, wie Sie Content-Module nach Kategorien sortieren können.</p>
 <p>Zu jedem Content-Modul liefert die Tabelle mehrere Informationen. In der linken Spalte steht der Name des Content-Moduls. Die mittlere Spalte stellt das Content-Modul in einem kleinen Vorschaufenster dar und informiert Sie so auf einen Blick über dessen Inhalt.</p>
 <p>Um sich eine größere Vorschau eines Content-Moduls anzeigen zu lassen, klicken Sie auf das entsprechende Bild. Diese Vorschau können Sie jederzeit wieder durch den Befehl <span style="font-weight: bold; color: #006fb9;">Vorschau</span> <span style="font-weight: bold; color: #006fb9;">schließen</span> verkleinern, der sich direkt links oberhalb des jeweiligen Vorschau-Fensters befindet.</p>
-<div class="p_ImageCaption"><div style="margin:0 auto;width:934px;padding:0px"><img src="das_untermenue_content-module_zeigt_alle.png" width="934" height="522" border="0" alt="Abb. 11.9: Das Untermenü Content-Module zeigt alle im Content-Manager zur Verfügung stehenden Content-Module übersichtlich in einer Liste an."><p style="text-align:center"><span class="f_ImageCaption">Abb. 11.9: Das Untermenü Content-Module zeigt alle im Content-Manager zur Verfügung stehenden Content-Module übersichtlich in einer Liste an.</span></p></div></div>
+<div class="p_ImageCaption"><div style="margin:0px auto 0px auto;width:934px;padding:0px 0px 0px 0px"><img src="das_untermenue_content-module_zeigt_alle.png" width="934" height="522" style="border:none" alt="Abb. 9.9: Das Untermenü Content-Module zeigt alle im Content-Manager zur Verfügung stehenden Content-Module übersichtlich in einer Liste an." title="Abb. 9.9: Das Untermenü Content-Module zeigt alle im Content-Manager zur Verfügung stehenden Content-Module übersichtlich in einer Liste an." /><p style="text-align:center"><span class="f_ImageCaption">Abb. 9.9: Das Untermenü Content-Module zeigt alle im Content-Manager zur Verfügung stehenden Content-Module übersichtlich in einer Liste an.</span></p></div></div>
 <p>Wie viele Content-Modul-Einträge in der Liste erscheinen sollen, legen Sie über die Option <span style="font-weight: bold; color: #006fb9;">Listenlänge</span> fest. Voreingestellt sind <span style="font-weight: bold; color: #006fb9;">20</span> Einträge, Sie können die Listenlänge aber jederzeit auf <span style="font-weight: bold; color: #006fb9;">50</span> oder <span style="font-weight: bold; color: #006fb9;">100</span> Einträge erweitern. Mit einem Klick auf die Schaltfläche <span style="font-weight: bold; color: #006fb9;">Anzeigen</span> übernehmen Sie diese Einstellung.</p>
 
   <!--ZOOMSTOP-->

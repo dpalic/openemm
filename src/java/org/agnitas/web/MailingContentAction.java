@@ -466,6 +466,8 @@ public class MailingContentAction extends StrutsActionBase {
                     	aMailing=mailingDao.getMailing(aForm.getMailingID(), AgnUtils.getCompanyID(req));
                     	aTag=aMailing.getDynamicTagById(aForm.getDynNameID());
                         aTag.removeContent(aForm.getContentID());
+                        
+                        
                         break;
                         
                     case MailingContentAction.ACTION_CHANGE_ORDER_UP:
@@ -492,19 +494,23 @@ public class MailingContentAction extends StrutsActionBase {
                 }
             }
             try {
-                aMailing.buildDependencies(false, getApplicationContext(req));
+                aMailing.buildDependencies(false, getApplicationContext(req), false);
             } catch (Exception e) {
                 logger.error( "Error building dependencies", e);
             }
 
-   			mailingDao.saveMailing(aMailing);
             // save
+   			mailingDao.saveMailing(aMailing);
+   			
+   			if(aForm.getAction() == ACTION_DELETE_TEXTBLOCK) {
+                mailingDao.deleteContent(aForm.getContentID());
+   			}
 
             writeTextblockChangeLog(aForm, AgnUtils.getAdmin(req), aMailing, aContent);
         }
         if (logger.isInfoEnabled()) logger.info("change content of mailing: "+aForm.getMailingID());
     }
-
+    
     /**
      * Format and write to user event log message about textblock
      * @param aForm - MailingContentForm

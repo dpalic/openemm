@@ -733,7 +733,7 @@ public class MailingBaseAction extends StrutsActionBase {
            
             aForm.getMediaEmail().syncTemplate(aMailing, aContext);
             
-            aMailing.buildDependencies(true, aContext);
+            aMailing.buildDependencies(true, aContext, aForm.isCopyFlag());
         } catch (Exception e) {
             logger.error("Error in save mailing id: "+aForm.getMailingID()+" msg: "+e.getMessage());
         }
@@ -810,6 +810,8 @@ public class MailingBaseAction extends StrutsActionBase {
                 }
             }
         }
+        
+        aForm.setCopyFlag(false);
     }
 
     /**
@@ -1114,7 +1116,7 @@ public class MailingBaseAction extends StrutsActionBase {
 			}
 
 			try {
-				mailing.buildDependencies( true, getWebApplicationContext());
+				mailing.buildDependencies( true, getWebApplicationContext(), false);
 				mailingDao.saveMailing( mailing);
 			} catch( Exception e) {
 				logger.error( "unable to update mailing ID " + mailingId + ": " + e.getMessage());

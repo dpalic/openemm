@@ -65,6 +65,7 @@ def checkprop (homedir):
 		'system.upload_archive=var\\tmp',
 		'system.attachment_archive=var\\tmp',
 		'system.logdir=var\\log',
+		'velocity.logdir=var\\log',
 		'system.upload=var\\tmp',
 		'log4j.appender.LOGFILE.File=var\\log\\emm_axis.log',
 		'log4j.appender.STRUTSLOG.File=var\\log\\emm_struts.log',

@@ -31,6 +31,7 @@ import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.agnitas.service.NewImportWizardService;
 import org.agnitas.service.impl.ImportWizardContentParseException;
 import org.agnitas.util.AgnUtils;
+import org.agnitas.util.FtpHelper;
 import org.agnitas.util.ImportReportEntry;
 import org.agnitas.util.ImportUtils;
 import org.agnitas.util.SFtpHelper;
@@ -101,6 +102,16 @@ public class AutoImportService {
 	}
 
 	public File getImportFile(AutoImport autoImport) throws Exception {
+		if (autoImport.getFileServer().toLowerCase().startsWith("ftp://")) {
+			// if configured so, download via FTP
+			return downloadFileViaFTP(autoImport);
+		} else {
+			// default: download via SFTP
+			return downloadFileViaSFTP(autoImport);
+		}
+	}
+
+	private File downloadFileViaSFTP(AutoImport autoImport) throws Exception {
 		SFtpHelper sFtpHelper = null;
 		InputStream inputStream = null;
 		OutputStream out = null;
@@ -154,6 +165,63 @@ public class AutoImportService {
 		} finally {
 			if (sFtpHelper != null) {
 				sFtpHelper.close();
+			}
+			IOUtils.closeQuietly(out);
+			IOUtils.closeQuietly(inputStream);
+		}
+	}
+
+	private File downloadFileViaFTP(AutoImport autoImport) throws Exception {
+		FtpHelper ftpHelper = null;
+		InputStream inputStream = null;
+		OutputStream out = null;
+		try {
+			String directoryPath = "";
+			
+			int lastSlash = autoImport.getFilePath().lastIndexOf("/");
+			if (lastSlash > 0) {
+				directoryPath = autoImport.getFilePath().substring(0, lastSlash);
+			}
+			
+			try {
+				ftpHelper = new FtpHelper(autoImport.getFileServer());
+				ftpHelper.connect();
+			} catch (Exception e) {
+				throw new Exception("Cannot connect to ftp server", e);
+			}
+
+			if (!ftpHelper.exists(directoryPath)) {
+				throw new Exception("Directory not found on ftp server");
+			}
+
+			if (!ftpHelper.exists(autoImport.getFilePath())) {
+				throw new Exception("File not found on ftp server");
+			}
+			
+			try {
+				inputStream = ftpHelper.get(autoImport.getFilePath());
+				File systemUploadDirectory = AgnUtils.createDirectory(AgnUtils.getDefaultValue("system.upload"));
+				String filename = "auto_import_" + (new Random()).nextInt() + ".csv";
+				out = new FileOutputStream(new File(systemUploadDirectory, filename));
+				int read;
+				byte[] bytes = new byte[1024];
+				while ((read = inputStream.read(bytes)) != -1) {
+					out.write(bytes, 0, read);
+				}
+				inputStream.close();
+				out.flush();
+				out.close();
+
+				File newFile = new File(systemUploadDirectory, filename);
+				return newFile;
+			} catch (Exception e) {
+				throw new Exception("Cannot read file from ftp server", e);
+			}
+		} catch (Exception e) {
+			throw e;
+		} finally {
+			if (ftpHelper != null) {
+				ftpHelper.close();
 			}
 			IOUtils.closeQuietly(out);
 			IOUtils.closeQuietly(inputStream);

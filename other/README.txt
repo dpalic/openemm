@@ -1,9 +1,7 @@
 IMPORTANT INFORMATION FOR RELEASE 2015
 =========================================
-Since version 2013 R2 Java 6 is no longer supported because SUN stopped free
-support in April 2013. Please install Java JDK 8 for OpenEMM 2015. (JDK 7
-would be ok, too, however Oracle plans to drop free suport of Java 7 in
-April 2015.)
+Please install Java JDK 8 for OpenEMM 2015 R2, because JDK 7 is no longer
+supported for free by Oracle.
 
 
 IMPORTANT GENERAL INFORMATION
@@ -43,12 +41,12 @@ $> chown -R openemm:openemm openemm
 $> cd openemm
 
 4. Untar OpenEMM tarball as root
-$> tar -xvzpf /tmp/OpenEMM-2015-bin.tar.gz
+$> tar -xvzpf /tmp/OpenEMM-2015_R2-bin.tar.gz
    (please do not forget option "p"!)
 
 5. Copy content for /usr/share/doc
-$> mkdir -p /usr/share/doc/OpenEMM-2015
-$> mv USR_SHARE/* /usr/share/doc/OpenEMM-2015
+$> mkdir -p /usr/share/doc/OpenEMM-2015_R2
+$> mv USR_SHARE/* /usr/share/doc/OpenEMM-2015_R2
 $> rm -rf USR_SHARE
 
 6. Replace the generic string "http://localhost:8080" with the domain name of
@@ -68,8 +66,8 @@ $> rm -rf USR_SHARE
     databases step by step through executing the corresponding SQL files
     in the right order - please see OpenEMM Install Guide for details)
 $> /etc/init.d/mysqld start
-$> mysql -u root -p openemm < /usr/share/doc/OpenEMM-2015/update_openemm-...
-$> mysql -u root -p openemm < /usr/share/doc/OpenEMM-2015/update_openemm-...
+$> mysql -u root -p openemm < /usr/share/doc/OpenEMM-2015_R2/update_openemm-...
+$> mysql -u root -p openemm < /usr/share/doc/OpenEMM-2015_R2/update_openemm-...
    For the update from 6.2 to 2011 you only have to process file
    update_openemm-6.2-2011_RC1.sql.
    For the update from 2011 to 2013 you only have to process file

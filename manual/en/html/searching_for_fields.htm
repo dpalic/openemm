@@ -1,6 +1,5 @@
-﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+﻿<!DOCTYPE HTML>
 <html>
-<!-- saved from url=(0029)http://www.helpandmanual.com/ -->
 <head>
    <title>Recipients - Managing customer data &gt; Searching for recipients &gt; Searching for fields</title>
    <meta name="generator" content="Help & Manual">
@@ -74,19 +73,19 @@ function toggleToggles() {
 .topichead { padding: 5px 5px 20px 5px; }
 -->
 </style>   
-<script type="text/javascript" src="helpman_topicinit.js"></script>
-<!-- Redirect browser to frame page if page is not in the content frame. -->
-<script type="text/javascript">
-<!--
-if (location.search.lastIndexOf("toc=0")<=0) {
-  if (parent.frames.length==0) { parent.location.href="index.html?searching_for_fields.htm"; }
-  else { parent.quicksync('a4.3.1'); }
-}
-//-->
-</script>
-<script type="text/javascript" src="highlight.js"></script></head>
-<body onload="highlight();">
-<div id="hmpopupDiv" style="visibility:hidden; position:absolute; z-index:1000; "></div>
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <script type="text/javascript">
+     HMSyncTOC("index.html", "searching_for_fields.htm");
+   </script>
+   <script type="text/javascript" src="highlight.js"></script>
+   <script type="text/javascript">
+     $(document).ready(function(){highlight();});
+   </script>
+</head>
+<body>
 <!--ZOOMSTOP-->
 
 <div id="idheader">
@@ -94,7 +93,7 @@ if (location.search.lastIndexOf("toc=0")<=0) {
   <tr>
     <td align="left" class="topichead">
       <p class="crumbs" id="idnav">
-        <a href="recipients___managing_customer.htm">Recipients - Managing customer data</a> &gt; <a href="searching_for_recipients.htm">Searching for recipients</a>&nbsp;&gt;&nbsp;Searching for fields    
+        <a href="recipients_-_managing_customer.htm">Recipients - Managing customer data</a> &gt; <a href="searching_for_recipients.htm">Searching for recipients</a>&nbsp;&gt;&nbsp;Searching for fields    
       </p>
     </td>
     <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
@@ -109,7 +108,7 @@ if (location.search.lastIndexOf("toc=0")<=0) {
         <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
         </a>
         
-          <a href="field_drop_down_list.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <a href="field_drop-down_list.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
           <img name=next src="btn_next_n.gif" border=0 alt="Next page">
           </a>
         
@@ -127,11 +126,11 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 <div id="idcontent">
   <div id="innerdiv"> 
-  <p class="p_Heading3"><span class="f_Heading3">Searching for fields</span></p>
+  <h3 class="p_Heading3"><span class="f_Heading3">Searching for fields</span></h3>
 
   <!--ZOOMRESTART-->
   <p>The <span style="font-weight: bold; color: #006fb9;">Advanced search</span> above the recipient list allows you to filter recipients according to defined search criteria. <span class="f_Recipient_Search">You select the field and the relational operator in two drop-down lists. The next entry field takes the reference value. The three entries together form the search rule. Once you have defined a search rule, you can apply it by clicking on the </span><span class="f_Recipient_Search" style="font-weight: bold; color: #006fb9;">Add</span><span class="f_Recipient_Search"> button. You can, in the same way as for the target groups definition, combine multiple search criteria with one another. When you have entered all of yourself criteria, click on the </span><span class="f_Recipient_Search" style="font-weight: bold; color: #006fb9;">Show</span><span class="f_Recipient_Search"> button. The OpenEMM will display a new list containing only those recipients matching the search rule.</span></p>
-<div class="p_ImageCaption"><div style="margin:0 auto;width:902px;padding:0px"><img src="this_search_rule_only_displays.png" width="902" height="169" border="0" alt="Fig. 4.7: This search rule only displays recipients whose last name is “Smith”."><p style="text-align:center"><span class="f_ImageCaption">Fig. 4.7: This search rule only displays recipients whose last name is “Smith”.</span></p></div></div>
+<div class="p_ImageCaption"><div style="margin:0px auto 0px auto;width:895px;padding:0px 0px 0px 0px"><img src="this_search_rule_only_displays.png" width="895" height="152" style="border:none" alt="Fig. 4.6: This search rule only displays recipients whose last name is “Doe”." title="Fig. 4.6: This search rule only displays recipients whose last name is “Doe”." /><p style="text-align:center"><span class="f_ImageCaption">Fig. 4.6: This search rule only displays recipients whose last name is “Doe”.</span></p></div></div>
 
   <!--ZOOMSTOP-->
   </div>

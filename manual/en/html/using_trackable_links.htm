@@ -1,6 +1,5 @@
-﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+﻿<!DOCTYPE HTML>
 <html>
-<!-- saved from url=(0029)http://www.helpandmanual.com/ -->
 <head>
    <title>Mailings - Sending out newsletters &gt; Create, edit and send mailings &gt; Using trackable links</title>
    <meta name="generator" content="Help & Manual">
@@ -74,19 +73,19 @@ function toggleToggles() {
 .topichead { padding: 5px 5px 20px 5px; }
 -->
 </style>   
-<script type="text/javascript" src="helpman_topicinit.js"></script>
-<!-- Redirect browser to frame page if page is not in the content frame. -->
-<script type="text/javascript">
-<!--
-if (location.search.lastIndexOf("toc=0")<=0) {
-  if (parent.frames.length==0) { parent.location.href="index.html?using_trackable_links.htm"; }
-  else { parent.quicksync('a3.2.8'); }
-}
-//-->
-</script>
-<script type="text/javascript" src="highlight.js"></script></head>
-<body onload="highlight();">
-<div id="hmpopupDiv" style="visibility:hidden; position:absolute; z-index:1000; "></div>
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <script type="text/javascript">
+     HMSyncTOC("index.html", "using_trackable_links.htm");
+   </script>
+   <script type="text/javascript" src="highlight.js"></script>
+   <script type="text/javascript">
+     $(document).ready(function(){highlight();});
+   </script>
+</head>
+<body>
 <!--ZOOMSTOP-->
 
 <div id="idheader">
@@ -94,7 +93,7 @@ if (location.search.lastIndexOf("toc=0")<=0) {
   <tr>
     <td align="left" class="topichead">
       <p class="crumbs" id="idnav">
-        <a href="mailings___sending_out_newslet.htm">Mailings - Sending out newsletters</a> &gt; <a href="create__edit_and_send_mailings.htm">Create, edit and send mailings</a>&nbsp;&gt;&nbsp;Using trackable links    
+        <a href="mailings_-_sending_out_newslet.htm">Mailings - Sending out newsletters</a> &gt; <a href="create__edit_and_send_mailings.htm">Create, edit and send mailings</a>&nbsp;&gt;&nbsp;Using trackable links    
       </p>
     </td>
     <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
@@ -127,10 +126,10 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 <div id="idcontent">
   <div id="innerdiv"> 
-  <p class="p_Heading3"><span class="f_Heading3">Using trackable links</span></p>
+  <h3 class="p_Heading3"><span class="f_Heading3">Using trackable links</span></h3>
 
   <!--ZOOMRESTART-->
-  <p>In order to evaluate the success of a mailing, trackable links may be inserted into the text. As soon as a mailing recipient clicks on the link, it calls up a URL linking to the AGNITAS server. The server registers a click and assigns it to a recipient. This works both for text mailings and for HTML mailings. However, the difference is in the notation. The example contains an integrated link. For an explanation, see chapter "<a href="create_a_link_in_the_text_vers.htm">Create a link in the text version</a>".</p>
+  <p>In order to evaluate the success of a mailing, trackable links may be inserted into the text. As soon as a mailing recipient clicks on the link, it calls up a URL linking to the AGNITAS server. The server registers a click and assigns it to a recipient. This works both for text mailings and for HTML mailings. However, the difference is in the notation. The example contains an integrated link. For an explanation, see chapter <a href="create_a_link_in_the_text_vers.htm" class="topiclink">Create a link in the text version</a>.</p>
 <p>A trackable link measures whether or not a mailing recipient clicked on that link. You can then measure whether or not the recipient was interested in the mailing subject. The chapter on statistics explains about the evaluation of trackable links.</p>
 
   <!--ZOOMSTOP-->

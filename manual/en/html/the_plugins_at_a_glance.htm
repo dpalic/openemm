@@ -1,6 +1,5 @@
-﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+﻿<!DOCTYPE HTML>
 <html>
-<!-- saved from url=(0029)http://www.helpandmanual.com/ -->
 <head>
    <title>Administration - Configuring the system &gt; Plugin Manager (only for license users) &gt; The plugins at a glance</title>
    <meta name="generator" content="Help & Manual">
@@ -74,19 +73,19 @@ function toggleToggles() {
 .topichead { padding: 5px 5px 20px 5px; }
 -->
 </style>   
-<script type="text/javascript" src="helpman_topicinit.js"></script>
-<!-- Redirect browser to frame page if page is not in the content frame. -->
-<script type="text/javascript">
-<!--
-if (location.search.lastIndexOf("toc=0")<=0) {
-  if (parent.frames.length==0) { parent.location.href="index.html?the_plugins_at_a_glance.htm"; }
-  else { parent.quicksync('a10.6.1'); }
-}
-//-->
-</script>
-<script type="text/javascript" src="highlight.js"></script></head>
-<body onload="highlight();">
-<div id="hmpopupDiv" style="visibility:hidden; position:absolute; z-index:1000; "></div>
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <script type="text/javascript">
+     HMSyncTOC("index.html", "the_plugins_at_a_glance.htm");
+   </script>
+   <script type="text/javascript" src="highlight.js"></script>
+   <script type="text/javascript">
+     $(document).ready(function(){highlight();});
+   </script>
+</head>
+<body>
 <!--ZOOMSTOP-->
 
 <div id="idheader">
@@ -94,7 +93,7 @@ if (location.search.lastIndexOf("toc=0")<=0) {
   <tr>
     <td align="left" class="topichead">
       <p class="crumbs" id="idnav">
-        <a href="settings___configuring_the_sys.htm">Administration - Configuring the system</a> &gt; <a href="plugin_manager.htm">Plugin Manager (only for license users)</a>&nbsp;&gt;&nbsp;The plugins at a glance    
+        <a href="settings_-_configuring_the_sys.htm">Administration - Configuring the system</a> &gt; <a href="plugin_manager.htm">Plugin Manager (only for license users)</a>&nbsp;&gt;&nbsp;The plugins at a glance    
       </p>
     </td>
     <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
@@ -127,11 +126,11 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 <div id="idcontent">
   <div id="innerdiv"> 
-  <p class="p_Heading3"><span class="f_Heading3">The plugins at a glance</span></p>
+  <h3 class="p_Heading3"><span class="f_Heading3">The plugins at a glance</span></h3>
 
   <!--ZOOMRESTART-->
   <p>If you want an overview of what plug-ins are currently included in OpenEMM, under <span style="font-weight: bold; color: #006fb9;">Administration</span> in the main menu, call the entry <span style="font-weight: bold; color: #006fb9;">Plugin Manager</span>. OpenEMM lists all plugins together with their status in the dialog that follows. As well as the <span style="font-weight: bold; color: #006fb9;">Plugin-ID</span>, the <span style="font-weight: bold; color: #006fb9;">Plugin name</span>, a short <span style="font-weight: bold; color: #006fb9;">Description</span>, the <span style="font-weight: bold; color: #006fb9;">Version</span> and the <span style="font-weight: bold; color: #006fb9;">Vendor</span>, you can also see whether the corresponding plugin has been activated or is currently inactive.</p>
-<div class="p_ImageCaption"><div style="margin:0 auto;width:936px;padding:0px"><img src="you_can_extend_produktname_with.png" width="936" height="235" border="0" alt="Fig. 12.10: You can extend OpenEMM with any number of functions by using the Plugin Manager."><p style="text-align:center"><span class="f_ImageCaption">Fig. 12.10: You can extend OpenEMM with any number of functions by using the Plugin Manager.</span></p></div></div>
+<div class="p_ImageCaption"><div style="margin:0px auto 0px auto;width:935px;padding:0px 0px 0px 0px"><img src="you_can_extend_produktname_with.png" width="935" height="247" style="border:none" alt="Fig. 10.10: You can extend OpenEMM with any number of functions by using the Plugin Manager." title="Fig. 10.10: You can extend OpenEMM with any number of functions by using the Plugin Manager." /><p style="text-align:center"><span class="f_ImageCaption">Fig. 10.10: You can extend OpenEMM with any number of functions by using the Plugin Manager.</span></p></div></div>
 <p>OpenEMM lists 50 entries with its standard setting. To modify this view, under <span style="font-weight: bold; color: #006fb9;">List size</span> click on the number <span style="font-weight: bold; color: #006fb9;">20</span> or <span style="font-weight: bold; color: #006fb9;">100</span> and then on <span style="font-weight: bold; color: #006fb9;">Show</span>. </p>
 
   <!--ZOOMSTOP-->

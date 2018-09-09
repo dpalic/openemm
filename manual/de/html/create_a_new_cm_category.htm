@@ -1,6 +1,5 @@
-﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+﻿<!DOCTYPE HTML>
 <html>
-<!-- saved from url=(0029)http://www.helpandmanual.com/ -->
 <head>
    <title>Content Manager &gt; Content-Module &gt; CM-Kategorien &gt; Neue CM-Kategorie anlegen</title>
    <meta name="generator" content="Help & Manual">
@@ -74,19 +73,19 @@ function toggleToggles() {
 .topichead { padding: 5px 5px 20px 5px; }
 -->
 </style>   
-<script type="text/javascript" src="helpman_topicinit.js"></script>
-<!-- Redirect browser to frame page if page is not in the content frame. -->
-<script type="text/javascript">
-<!--
-if (location.search.lastIndexOf("toc=0")<=0) {
-  if (parent.frames.length==0) { parent.location.href="index.html?create_a_new_cm_category.htm"; }
-  else { parent.quicksync('a9.3.6.1'); }
-}
-//-->
-</script>
-<script type="text/javascript" src="highlight.js"></script></head>
-<body onload="highlight();">
-<div id="hmpopupDiv" style="visibility:hidden; position:absolute; z-index:1000; "></div>
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <script type="text/javascript">
+     HMSyncTOC("index.html", "create_a_new_cm_category.htm");
+   </script>
+   <script type="text/javascript" src="highlight.js"></script>
+   <script type="text/javascript">
+     $(document).ready(function(){highlight();});
+   </script>
+</head>
+<body>
 <!--ZOOMSTOP-->
 
 <div id="idheader">
@@ -127,10 +126,10 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 <div id="idcontent">
   <div id="innerdiv"> 
-  <p class="p_Heading4"><span class="f_Heading4">Neue CM-Kategorie anlegen</span></p>
+  <h4 class="p_Heading4"><span class="f_Heading4">Neue CM-Kategorie anlegen</span></h4>
 
   <!--ZOOMRESTART-->
-  <div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">1.</span></td><td><span class="f_Zahlen">Um ein neues Content-Modul anzulegen, wählen Sie den Navigationsleisten-Eintrag </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Mailings</span><span class="f_Zahlen"> und dann </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Content Manager</span><span class="f_Zahlen">, klicken auf den Seitenreiter </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">CM-Kategorien</span><span class="f_Zahlen"> und anschließend auf den Link </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Neue CM-Kategorie</span><span class="f_Zahlen">.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">2.</span></td><td><span class="f_Zahlen">Geben Sie der CM-Kategorie im Eingabefeld </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Name</span><span class="f_Zahlen"> einen einprägsamen Titel. Diese Bezeichnung finden Sie später in der Übersichtsliste der CM-Kategorien wieder. Wählen Sie einen möglichst aussagekräftigen Titel, um sich die Arbeit zu erleichtern.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">3.</span></td><td><span class="f_Zahlen">Das gilt auch für das Eingabefeld </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Beschreibung</span><span class="f_Zahlen">. Der Text sollte aus einem oder zwei Sätzen bestehen und in knappen Worten die Funktion der CM-Kategorie beschreiben.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">4.</span></td><td><span class="f_Zahlen">Mit einem Klick auf </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Speichern</span><span class="f_Zahlen"> übernimmt der OpenEMM alle Einstellungen.</span></td></tr></table></div>
+  <div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="border:none;border-spacing:0px;padding:0px;line-height: normal;"><tr valign="baseline" style="vertical-align:baseline"><td style="border:none;width:16px"><span style="font-size:11pt; font-family: 'Arial';color:#000000;">1.</span></td><td style="border:none"><span class="f_Zahlen">Um ein neues Content-Modul anzulegen, wählen Sie den Navigationsleisten-Eintrag </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Mailings</span><span class="f_Zahlen"> und dann </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Content Manager</span><span class="f_Zahlen">, klicken auf den Seitenreiter </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">CM-Kategorien</span><span class="f_Zahlen"> und anschließend auf den Link </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Neue CM-Kategorie</span><span class="f_Zahlen">.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="border:none;border-spacing:0px;padding:0px;line-height: normal;"><tr valign="baseline" style="vertical-align:baseline"><td style="border:none;width:16px"><span style="font-size:11pt; font-family: 'Arial';color:#000000;">2.</span></td><td style="border:none"><span class="f_Zahlen">Geben Sie der CM-Kategorie im Eingabefeld </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Name</span><span class="f_Zahlen"> einen einprägsamen Titel. Diese Bezeichnung finden Sie später in der Übersichtsliste der CM-Kategorien wieder. Wählen Sie einen möglichst aussagekräftigen Titel, um sich die Arbeit zu erleichtern.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="border:none;border-spacing:0px;padding:0px;line-height: normal;"><tr valign="baseline" style="vertical-align:baseline"><td style="border:none;width:16px"><span style="font-size:11pt; font-family: 'Arial';color:#000000;">3.</span></td><td style="border:none"><span class="f_Zahlen">Das gilt auch für das Eingabefeld </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Beschreibung</span><span class="f_Zahlen">. Der Text sollte aus einem oder zwei Sätzen bestehen und in knappen Worten die Funktion der CM-Kategorie beschreiben.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="border:none;border-spacing:0px;padding:0px;line-height: normal;"><tr valign="baseline" style="vertical-align:baseline"><td style="border:none;width:16px"><span style="font-size:11pt; font-family: 'Arial';color:#000000;">4.</span></td><td style="border:none"><span class="f_Zahlen">Mit einem Klick auf </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Speichern</span><span class="f_Zahlen"> übernimmt der OpenEMM alle Einstellungen.</span></td></tr></table></div>
   <!--ZOOMSTOP-->
   </div>
 </div>

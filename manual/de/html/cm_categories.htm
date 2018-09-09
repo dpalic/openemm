@@ -1,6 +1,5 @@
-﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+﻿<!DOCTYPE HTML>
 <html>
-<!-- saved from url=(0029)http://www.helpandmanual.com/ -->
 <head>
    <title>Content Manager &gt; Content-Module &gt; CM-Kategorien</title>
    <meta name="generator" content="Help & Manual">
@@ -74,19 +73,19 @@ function toggleToggles() {
 .topichead { padding: 5px 5px 20px 5px; }
 -->
 </style>   
-<script type="text/javascript" src="helpman_topicinit.js"></script>
-<!-- Redirect browser to frame page if page is not in the content frame. -->
-<script type="text/javascript">
-<!--
-if (location.search.lastIndexOf("toc=0")<=0) {
-  if (parent.frames.length==0) { parent.location.href="index.html?cm_categories.htm"; }
-  else { parent.quicksync('a9.3.6'); }
-}
-//-->
-</script>
-<script type="text/javascript" src="highlight.js"></script></head>
-<body onload="highlight();">
-<div id="hmpopupDiv" style="visibility:hidden; position:absolute; z-index:1000; "></div>
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <script type="text/javascript">
+     HMSyncTOC("index.html", "cm_categories.htm");
+   </script>
+   <script type="text/javascript" src="highlight.js"></script>
+   <script type="text/javascript">
+     $(document).ready(function(){highlight();});
+   </script>
+</head>
+<body>
 <!--ZOOMSTOP-->
 
 <div id="idheader">
@@ -127,12 +126,12 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 <div id="idcontent">
   <div id="innerdiv"> 
-  <p class="p_Heading3"><span class="f_Heading3">CM-Kategorien</span></p>
+  <h3 class="p_Heading3"><span class="f_Heading3">CM-Kategorien</span></h3>
 
   <!--ZOOMRESTART-->
   <p>Der Content Manager bietet Ihnen die Möglichkeit, jedes Content-Modul einer von Ihnen definierten Kategorie zuzuordnen. Das macht zum einen Sinn, wenn Sie mit vielen verschiedenen Content-Modulen arbeiten und diese Sammlung übersichtlicher organisieren wollen. Zum anderen haben Sie über die Kategorie-Auswahl schnell das passende Content-Modul zur Hand, wenn Sie ein neues Mailing erstellen und dabei eine ganz bestimmte Vorlage benötigen.</p>
 <p>Um die CM-Kategorien aufzurufen, klicken Sie im Hauptmenü auf <span style="font-weight: bold; color: #006fb9;">Mailings</span> und <span style="font-weight: bold; color: #006fb9;">Content Manager</span> und anschließend auf <span style="font-weight: bold; color: #006fb9;">CM-Kategorien</span>. Der OpenEMM listet nun alle vorhandenen CM-Kategorien auf.</p>
-<div class="p_ImageCaption"><div style="margin:0 auto;width:935px;padding:0px"><img src="der_e-marketing_manager_listet_alle.png" width="935" height="225" border="0" alt="Abb. 11.14: &nbsp;Der OpenEMM listet alle verfügbaren CM-Kategorien auf."><p style="text-align:center"><span class="f_ImageCaption">Abb. 11.14: &nbsp;Der OpenEMM listet alle verfügbaren CM-Kategorien auf.</span></p></div></div>
+<div class="p_ImageCaption"><div style="margin:0px auto 0px auto;width:935px;padding:0px 0px 0px 0px"><img src="der_e-marketing_manager_listet_alle.png" width="935" height="225" style="border:none" alt="Abb. 9.14: &nbsp;Der OpenEMM listet alle verfügbaren CM-Kategorien auf." title="Abb. 9.14: &nbsp;Der OpenEMM listet alle verfügbaren CM-Kategorien auf." /><p style="text-align:center"><span class="f_ImageCaption">Abb. 9.14: &nbsp;Der OpenEMM listet alle verfügbaren CM-Kategorien auf.</span></p></div></div>
 <p>Wie viele Einträge in der Liste erscheinen sollen, legen Sie über die Option <span style="font-weight: bold; color: #006fb9;">Listenlänge</span> fest. Voreingestellt sind <span style="font-weight: bold; color: #006fb9;">20</span> Einträge, Sie können die Listenlänge aber jederzeit auf <span style="font-weight: bold; color: #006fb9;">50</span> oder <span style="font-weight: bold; color: #006fb9;">100</span> Einträge erweitern. Mit einem Klick auf die Schaltfläche <span style="font-weight: bold; color: #006fb9;">Anzeigen</span> übernehmen Sie diese Einstellung.</p>
 <p>Zu jeder CM-Kategorie liefert die Tabelle mehrere Informationen. Ganz links steht der Name, dann die Beschreibung. Rechts in jeder Spalte sehen Sie zwei Symbole, über die Sie die CM-Kategorie löschen beziehungsweise bearbeiten können.</p>
 

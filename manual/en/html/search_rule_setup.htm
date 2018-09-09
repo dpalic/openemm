@@ -1,6 +1,5 @@
-﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+﻿<!DOCTYPE HTML>
 <html>
-<!-- saved from url=(0029)http://www.helpandmanual.com/ -->
 <head>
    <title>Target groups - Dynamic filters &gt; Search rule setup</title>
    <meta name="generator" content="Help & Manual">
@@ -74,19 +73,19 @@ function toggleToggles() {
 .topichead { padding: 5px 5px 20px 5px; }
 -->
 </style>   
-<script type="text/javascript" src="helpman_topicinit.js"></script>
-<!-- Redirect browser to frame page if page is not in the content frame. -->
-<script type="text/javascript">
-<!--
-if (location.search.lastIndexOf("toc=0")<=0) {
-  if (parent.frames.length==0) { parent.location.href="index.html?search_rule_setup.htm"; }
-  else { parent.quicksync('a6.4'); }
-}
-//-->
-</script>
-<script type="text/javascript" src="highlight.js"></script></head>
-<body onload="highlight();">
-<div id="hmpopupDiv" style="visibility:hidden; position:absolute; z-index:1000; "></div>
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <script type="text/javascript">
+     HMSyncTOC("index.html", "search_rule_setup.htm");
+   </script>
+   <script type="text/javascript" src="highlight.js"></script>
+   <script type="text/javascript">
+     $(document).ready(function(){highlight();});
+   </script>
+</head>
+<body>
 <!--ZOOMSTOP-->
 
 <div id="idheader">
@@ -94,18 +93,18 @@ if (location.search.lastIndexOf("toc=0")<=0) {
   <tr>
     <td align="left" class="topichead">
       <p class="crumbs" id="idnav">
-        <a href="target_groups___dynamic_filter.htm">Target groups - Dynamic filters</a>&nbsp;&gt;&nbsp;Search rule setup    
+        <a href="target_groups_-_dynamic_filter.htm">Target groups - Dynamic filters</a>&nbsp;&gt;&nbsp;Search rule setup    
       </p>
     </td>
     <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
         
         
-          <a href="evaluating_target_groups.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <a href="creating_and_managing_target_g.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
           <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
           </a>
         
         
-        <a href="target_groups___dynamic_filter.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <a href="target_groups_-_dynamic_filter.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
         <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
         </a>
         
@@ -127,150 +126,181 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 <div id="idcontent">
   <div id="innerdiv"> 
-  <p class="p_Heading2"><span class="f_Heading2">Search rule setup</span></p>
+  <h2 class="p_Heading2"><span class="f_Heading2">Search rule setup</span></h2>
 
   <!--ZOOMRESTART-->
-  <p>Target groups are defined using search rules. A search rule consists of a field name in the database, a relational operator and a reference value. The search rule <span style="font-weight: bold; color: #006fb9;">GENDER</span> <span style="font-weight: bold; color: #006fb9;">=</span> <span style="font-style: italic;">1</span>, for instance, filters all female recipients (<span style="font-style: italic;">0</span> = male, <span style="font-style: italic;">1</span> = female, <span style="font-style: italic;">2</span> = unknown) from the database. Detailed information can be found in chapter "<a href="searching_for_fields.htm">Searching for fields</a>". The following table lists all valid relational operators:</p>
-<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 19px 0px;"><table width="100%" cellspacing="0" cellpadding="3" border="0" style="border: none; border-spacing:0px; border-collapse: collapse;">
+  <p>Target groups are defined using search rules. A search rule consists of a field name in the database, a relational operator and a reference value. The search rule <span style="font-weight: bold; color: #006fb9;">GENDER</span> <span style="font-weight: bold; color: #006fb9;">=</span> <span style="font-style: italic;">1</span>, for instance, filters all female recipients (<span style="font-style: italic;">0</span> = male, <span style="font-style: italic;">1</span> = female, <span style="font-style: italic;">2</span> = unknown) from the database. Detailed information can be found in chapter <a href="searching_for_fields.htm" class="topiclink">Searching for fields</a>. The following table lists all valid relational operators:</p>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 19px 0px;"><table style="width:100%; border:none; border-spacing:0px; border-collapse:collapse;">
 <tr style="text-align:left;vertical-align:middle;">
-<th valign="middle" width="235" style="width:235px; border: solid 1px #000000;"><p class="p_TabelleUeberschrift"><span class="f_TabelleUeberschrift">Relational operator</span></p>
+<th style="vertical-align:middle; width:235px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleUeberschrift"><span class="f_TabelleUeberschrift">Relational operator</span></p>
 </th>
-<th valign="middle" width="708" style="width:708px; border: solid 1px #000000;"><p class="p_TabelleUeberschrift"><span class="f_TabelleUeberschrift">Description</span></p>
+<th style="vertical-align:middle; width:708px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleUeberschrift"><span class="f_TabelleUeberschrift">Description</span></p>
 </th>
 </tr>
 <tr style="text-align:left;vertical-align:middle;">
-<td valign="middle" width="235" style="width:235px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">=</span></p>
+<td style="vertical-align:middle; width:235px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">=</span></p>
 </td>
-<td valign="middle" width="708" style="width:708px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Field value and contents are identical. The reference value may be a number or text.</span><br>
+<td style="vertical-align:middle; width:708px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Field value and contents are identical. The reference value may be a number or text.</span><br />
 <span class="f_TabelleInhalt" style="font-weight: bold;">Please note:</span><span class="f_TabelleInhalt"> When using the equals operator, reference value and field contents must be absolutely identical. However, no difference is made between uppercase and lowercase letters: </span><span class="f_TabelleInhalt" style="font-style: italic;">Axel</span><span class="f_TabelleInhalt"> equals </span><span class="f_TabelleInhalt" style="font-style: italic;">axel</span><span class="f_TabelleInhalt">.</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:middle;">
-<td valign="middle" width="235" style="width:235px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">&lt;&gt;</span></p>
+<td style="vertical-align:middle; width:235px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">&lt;&gt;</span></p>
 </td>
-<td valign="middle" width="708" style="width:708px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Field contents and reference value are different (unequal). The reference value may be a number or text.</span></p>
-</td>
-</tr>
-<tr style="text-align:left;vertical-align:middle;">
-<td valign="middle" width="235" style="width:235px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">&gt;</span></p>
-</td>
-<td valign="middle" width="708" style="width:708px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">The field content is more than the reference value. The reference value may be a number or text. If it is text, the sequence in the alphabet matters, i.e. </span><span class="f_TabelleInhalt" style="font-style: italic;">b</span><span class="f_TabelleInhalt"> is more than </span><span class="f_TabelleInhalt" style="font-style: italic;">a</span><span class="f_TabelleInhalt">.</span></p>
+<td style="vertical-align:middle; width:708px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Field contents and reference value are different (unequal). The reference value may be a number or text.</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:middle;">
-<td valign="middle" width="235" style="width:235px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">&lt;</span></p>
+<td style="vertical-align:middle; width:235px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">&gt;</span></p>
 </td>
-<td valign="middle" width="708" style="width:708px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">The field content is less than the reference value. The reference value may be a number or text. If it is text, the sequence in the alphabet matters, i.e. </span><span class="f_TabelleInhalt" style="font-style: italic;">a</span><span class="f_TabelleInhalt"> is less than </span><span class="f_TabelleInhalt" style="font-style: italic;">b</span><span class="f_TabelleInhalt">.</span></p>
-</td>
-</tr>
-<tr style="text-align:left;vertical-align:middle;">
-<td valign="middle" width="235" style="width:235px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">MOD</span></p>
-</td>
-<td valign="middle" width="708" style="width:708px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Modulo Operator; for an explanation see chapter " <a href="list_split_using_mod.htm">List split using MOD</a>".</span></p>
+<td style="vertical-align:middle; width:708px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">The field content is more than the reference value. The reference value may be a number or text. If it is text, the sequence in the alphabet matters, i.e. </span><span class="f_TabelleInhalt" style="font-style: italic;">b</span><span class="f_TabelleInhalt"> is more than </span><span class="f_TabelleInhalt" style="font-style: italic;">a</span><span class="f_TabelleInhalt">.</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:middle;">
-<td valign="middle" width="235" style="width:235px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">IS</span></p>
+<td style="vertical-align:middle; width:235px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">&lt;</span></p>
 </td>
-<td valign="middle" width="708" style="width:708px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Contents check; for an explanation see chapter "<a href="is_and_null_or_not_null.htm">IS and NULL or NOT NULL</a>".</span></p>
-</td>
-</tr>
-<tr style="text-align:left;vertical-align:middle;">
-<td valign="middle" width="235" style="width:235px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">LIKE</span></p>
-</td>
-<td valign="middle" width="708" style="width:708px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">The field content is like a reference text containing wildcards (see chapter "<a href="drop_down_list_for_relational_.htm">Drop-down list for relational operators</a>").</span></p>
+<td style="vertical-align:middle; width:708px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">The field content is less than the reference value. The reference value may be a number or text. If it is text, the sequence in the alphabet matters, i.e. </span><span class="f_TabelleInhalt" style="font-style: italic;">a</span><span class="f_TabelleInhalt"> is less than </span><span class="f_TabelleInhalt" style="font-style: italic;">b</span><span class="f_TabelleInhalt">.</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:middle;">
-<td valign="middle" width="235" style="width:235px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">NOT LIKE</span></p>
+<td style="vertical-align:middle; width:235px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">MOD</span></p>
 </td>
-<td valign="middle" width="708" style="width:708px; border: solid 1px #000000;"><p style="margin: 0px 0px 0px 0px;"><span style="font-family: 'Times New Roman';">The field content is not like a reference text containing wildcards (see chapter "<a href="drop_down_list_for_relational_.htm">Drop-down list for relational operators</a>").</span></p>
+<td style="vertical-align:middle; width:708px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Modulo Operator; for an explanation see chapter  <a href="list_split_using_mod.htm" class="topiclink">List split using MOD</a>.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:235px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">IS</span></p>
+</td>
+<td style="vertical-align:middle; width:708px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Contents check; for an explanation see chapter <a href="is_and_null_or_not_null.htm" class="topiclink">IS and NULL or NOT NULL</a>.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:235px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">LIKE</span></p>
+</td>
+<td style="vertical-align:middle; width:708px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">The field content is like a reference text containing wildcards (see chapter <a href="drop-down_list_for_relational_.htm" class="topiclink">Drop-down list for relational operators</a>).</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:235px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">NOT LIKE</span></p>
+</td>
+<td style="vertical-align:middle; width:708px; padding:3px; border:solid 1px #000000;"><p style="margin: 0px 0px 0px 0px;"><span style="font-family: 'Times New Roman';">The field content is not like a reference text containing wildcards (see chapter <a href="drop-down_list_for_relational_.htm" class="topiclink">Drop-down list for relational operators</a>).</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="235" style="width:235px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">&lt;=</span></p>
+<td style="vertical-align:top; width:235px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">&lt;=</span></p>
 </td>
-<td valign="top" width="708" style="width:708px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">The field content is less than the reference value or equal. The reference value may be a number or text. If it is text, the sequence in the alphabet matters, i.e. </span><span class="f_TabelleInhalt" style="font-style: italic;">a</span><span class="f_TabelleInhalt"> is less than </span><span class="f_TabelleInhalt" style="font-style: italic;">b</span><span class="f_TabelleInhalt">.</span></p>
+<td style="vertical-align:top; width:708px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">The field content is less than the reference value or equal. The reference value may be a number or text. If it is text, the sequence in the alphabet matters, i.e. </span><span class="f_TabelleInhalt" style="font-style: italic;">a</span><span class="f_TabelleInhalt"> is less than </span><span class="f_TabelleInhalt" style="font-style: italic;">b</span><span class="f_TabelleInhalt">.</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="235" style="width:235px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">&gt;=</span></p>
+<td style="vertical-align:top; width:235px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">&gt;=</span></p>
 </td>
-<td valign="top" width="708" style="width:708px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">The field content is more than the reference value or equal. The reference value may be a number or text. If it is text, the sequence in the alphabet matters, i.e. </span><span class="f_TabelleInhalt" style="font-style: italic;">b</span><span class="f_TabelleInhalt"> is more than </span><span class="f_TabelleInhalt" style="font-style: italic;">a</span><span class="f_TabelleInhalt">.</span></p>
+<td style="vertical-align:top; width:708px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">The field content is more than the reference value or equal. The reference value may be a number or text. If it is text, the sequence in the alphabet matters, i.e. </span><span class="f_TabelleInhalt" style="font-style: italic;">b</span><span class="f_TabelleInhalt"> is more than </span><span class="f_TabelleInhalt" style="font-style: italic;">a</span><span class="f_TabelleInhalt">.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:top; width:235px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">yes</span></p>
+</td>
+<td style="vertical-align:top; width:708px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">The condition is true.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:top; width:235px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">no</span></p>
+</td>
+<td style="vertical-align:top; width:708px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">The condition is not true.</span></p>
 </td>
 </tr>
 </table>
 </div>
-<p>The OpenEMM uses predefined fields for the recipient database. The search rule uses those fields as well as any user-defined fields (see chapter "<a href="extending_recipients_profiles.htm">Extending recipient's profiles</a>"). The following table lists all fields which are valid for a target group search rule.</p>
-<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 19px 0px;"><table width="100%" cellspacing="0" cellpadding="3" border="0" style="border: none; border-spacing:0px; border-collapse: collapse;">
+<p>The OpenEMM uses predefined fields for the recipient database. The search rule uses those fields as well as any user-defined fields (see chapter <a href="extending_recipients_profiles.htm" class="topiclink">Extending recipient's profiles</a>). The following table lists all fields which are valid for a target group search rule.</p>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 19px 0px;"><table style="width:100%; border:none; border-spacing:0px; border-collapse:collapse;">
 <tr style="text-align:left;vertical-align:middle;">
-<th valign="middle" width="200" style="width:200px; border: solid 1px #000000;"><p class="p_TabelleUeberschrift"><span class="f_TabelleUeberschrift">Field for internal use</span></p>
+<th style="vertical-align:middle; width:200px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleUeberschrift"><span class="f_TabelleUeberschrift">Field for internal use</span></p>
 </th>
-<th valign="middle" width="743" style="width:743px; border: solid 1px #000000;"><p class="p_TabelleUeberschrift"><span class="f_TabelleUeberschrift">Description</span></p>
+<th style="vertical-align:middle; width:743px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleUeberschrift"><span class="f_TabelleUeberschrift">Description</span></p>
 </th>
 </tr>
 <tr style="text-align:left;vertical-align:middle;">
-<td valign="middle" width="200" style="width:200px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">CREATION_DATE</span></p>
+<td style="vertical-align:middle; width:200px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">CHANGE_DATE</span></p>
 </td>
-<td valign="middle" width="743" style="width:743px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Date when the recipient was entered into the database.</span></p>
-</td>
-</tr>
-<tr style="text-align:left;vertical-align:middle;">
-<td valign="middle" width="200" style="width:200px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">CUSTOMER_ID</span></p>
-</td>
-<td valign="middle" width="743" style="width:743px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">The OpenEMM will automatically assign a customer ID to all new recipients. This ID is unique. Each recipient can be identified unmistakably by his or her CUSTOMER_ID.</span></p>
+<td style="vertical-align:middle; width:743px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Date of last profile change.</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:middle;">
-<td valign="middle" width="200" style="width:200px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">DATASOURCE_ID</span></p>
+<td style="vertical-align:middle; width:200px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">CREATION_DATE</span></p>
 </td>
-<td valign="middle" width="743" style="width:743px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">ID of the data source from where recipient data were imported. If csv data is imported, the OpenEMM will automatically assign an ID (see chapter "<a href="import_function_for_recipient_.htm">Import function for recipient data</a>") per recipient profile.</span></p>
-</td>
-</tr>
-<tr style="text-align:left;vertical-align:middle;">
-<td valign="middle" width="200" style="width:200px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">EMAIL</span></p>
-</td>
-<td valign="middle" width="743" style="width:743px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Recipient’s e-mail address.</span></p>
+<td style="vertical-align:middle; width:743px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Date when the recipient was entered into the database.</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:middle;">
-<td valign="middle" width="200" style="width:200px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">FIRSTNAME</span></p>
+<td style="vertical-align:middle; width:200px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">CUSTOMER_ID</span></p>
 </td>
-<td valign="middle" width="743" style="width:743px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Recipient’s first name.</span></p>
-</td>
-</tr>
-<tr style="text-align:left;vertical-align:middle;">
-<td valign="middle" width="200" style="width:200px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">GENDER</span></p>
-</td>
-<td valign="middle" width="743" style="width:743px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Recipient’s sex (gender). The OpenEMM uses numbers to identify a recipient’s sex: </span><span class="f_TabelleInhalt" style="font-style: italic;">0</span><span class="f_TabelleInhalt"> means male, </span><span class="f_TabelleInhalt" style="font-style: italic;">1</span><span class="f_TabelleInhalt"> means female, and all recipients whose sex is unknown are marked </span><span class="f_TabelleInhalt" style="font-style: italic;">2</span><span class="f_TabelleInhalt">.</span></p>
+<td style="vertical-align:middle; width:743px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">The OpenEMM will automatically assign a customer ID to all new recipients. This ID is unique. Each recipient can be identified unmistakably by his or her CUSTOMER_ID.</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:middle;">
-<td valign="middle" width="200" style="width:200px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">LASTNAME</span></p>
+<td style="vertical-align:middle; width:200px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">DATASOURCE_ID</span></p>
 </td>
-<td valign="middle" width="743" style="width:743px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Recipient’s last name.</span></p>
-</td>
-</tr>
-<tr style="text-align:left;vertical-align:middle;">
-<td valign="middle" width="200" style="width:200px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">MAILTYPE</span></p>
-</td>
-<td valign="middle" width="743" style="width:743px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Which mail type the recipient selected. </span><span class="f_TabelleInhalt" style="font-style: italic;">0</span><span class="f_TabelleInhalt"> means text, </span><span class="f_TabelleInhalt" style="font-style: italic;">1</span><span class="f_TabelleInhalt"> is HTML and </span><span class="f_TabelleInhalt" style="font-style: italic;">2</span><span class="f_TabelleInhalt"> means Offline-HTML.</span></p>
+<td style="vertical-align:middle; width:743px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">ID of the data source from where recipient data were imported. If csv data is imported, the OpenEMM will automatically assign an ID (see chapter <a href="import_function_for_recipient_.htm" class="topiclink">Import function for recipient data</a>) per recipient profile.</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:middle;">
-<td valign="middle" width="200" style="width:200px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">CHANGE_DATE</span></p>
+<td style="vertical-align:middle; width:200px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">EMAIL</span></p>
 </td>
-<td valign="middle" width="743" style="width:743px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Date of last profile change.</span></p>
+<td style="vertical-align:middle; width:743px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Recipient’s e-mail address.</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:middle;">
-<td valign="middle" width="200" style="width:200px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">TITLE</span></p>
+<td style="vertical-align:middle; width:200px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">FIRSTNAME</span></p>
 </td>
-<td valign="middle" width="743" style="width:743px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Recipient’s title (</span><span class="f_TabelleInhalt" style="font-style: italic;">Dr.</span><span class="f_TabelleInhalt"> etc.).</span></p>
+<td style="vertical-align:middle; width:743px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Recipient’s first name.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:200px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">GENDER</span></p>
+</td>
+<td style="vertical-align:middle; width:743px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Recipient’s sex (gender). The OpenEMM uses numbers to identify a recipient’s sex: </span><span class="f_TabelleInhalt" style="font-style: italic;">0</span><span class="f_TabelleInhalt"> means male, </span><span class="f_TabelleInhalt" style="font-style: italic;">1</span><span class="f_TabelleInhalt"> means female, and all recipients whose sex is unknown are marked </span><span class="f_TabelleInhalt" style="font-style: italic;">2</span><span class="f_TabelleInhalt">.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:200px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">LASTNAME</span></p>
+</td>
+<td style="vertical-align:middle; width:743px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Recipient’s last name.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:200px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">MAILTYPE</span></p>
+</td>
+<td style="vertical-align:middle; width:743px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Which mail type the recipient selected. </span><span class="f_TabelleInhalt" style="font-style: italic;">0</span><span class="f_TabelleInhalt"> means text, </span><span class="f_TabelleInhalt" style="font-style: italic;">1</span><span class="f_TabelleInhalt"> is HTML and </span><span class="f_TabelleInhalt" style="font-style: italic;">2</span><span class="f_TabelleInhalt"> means Offline-HTML.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:200px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">TITLE</span></p>
+</td>
+<td style="vertical-align:middle; width:743px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Recipient’s title (</span><span class="f_TabelleInhalt" style="font-style: italic;">Dr.</span><span class="f_TabelleInhalt"> etc.).</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:200px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Mailing opened</span></p>
+</td>
+<td style="vertical-align:middle; width:743px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Recipient has opened the mailing.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:200px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">In mailing clicked</span></p>
+</td>
+<td style="vertical-align:middle; width:743px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Recipient has clicked on a link in the mailing.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:200px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Mailing received</span></p>
+</td>
+<td style="vertical-align:middle; width:743px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Recipient has received the mailing.</span></p>
 </td>
 </tr>
 </table>
 </div>
+<p><span style="font-weight: bold;">Please note:</span> Using three internal fields, <span style="font-weight: bold; color: #006fb9;">Mailing opened</span>, <span style="font-weight: bold; color: #006fb9;">In mailing clicked</span> and <span style="font-weight: bold; color: #006fb9;">Mailing received</span>, you can then refine the inquiry across further fields. You can either do that via the <span style="font-weight: bold; color: #006fb9;">Yes</span> or <span style="font-weight: bold; color: #006fb9;">No</span> operator, by which you set whether the search rule fits the selected target group or not. Or in a further field you can select the mailing which the search refers to.</p>
 
   <!--ZOOMSTOP-->
   </div>

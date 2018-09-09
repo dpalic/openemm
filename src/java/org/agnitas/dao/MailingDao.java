@@ -458,4 +458,8 @@ public interface MailingDao extends ApplicationContextAware {
 	public String getEmailParameter(int mailingID);
 	
 	public String getSQLExpression(String targetExpression);
+
+	
+	// Yes, I know, that is a bad hack to remove a content block in MailingDAO.
+	public void deleteContent(int contentID);
 }

@@ -1,0 +1,158 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+   <title>Recipients - Managing customer data &gt; Import function for recipient data &gt; Creating a CSV-file</title>
+   <meta name="generator" content="Help & Manual">
+   <meta name="keywords" content="">
+   <meta name="description" content="Creating a CSV-file">
+   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+   <!-- This line forces IE8 into IE7 mode, safer until IE8 is better known -->
+   <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7" />
+
+   <link type="text/css" href="default.css" rel="stylesheet">
+   <link type="text/css" href="custom.css" rel="stylesheet">
+   <script type="text/javascript" src="nsh.js"></script>
+
+<script type="text/javascript">   
+// Toggle Toggler 
+
+var toggleCount=false;
+var switchState;
+
+function toggleToggles() {
+
+    if (!toggleCount) {
+     toggleCount = true;
+     HMToggleExpandAll(true);
+     switchState = true;
+     }
+   
+     else if (switchState) {
+        HMToggleExpandAll(false);
+        switchState = false;
+        }
+        
+     else  {
+        HMToggleExpandAll(true);
+        switchState = true;
+        } 
+    }
+</script>
+   
+<!-- non-scrolling headers for CHM and browser-based help, local styles-->
+<style TYPE="text/css" media="screen"> 
+   body {    
+      margin:0; 
+      padding:0; 
+      overflow: auto; 
+      background: #FFFFFF; 
+   } 
+   #idheader { 
+      width:100%; 
+      height:auto; 
+      padding: 0; 
+      margin: 0; 
+} 
+
+   #callout-table, #overview-table {display:block; position:relative; top:0; left:0;}
+   #callout-icon {display:block; position:absolute; top:-11px; left:-11px;}
+   #callout-icon-flag {display:block; position:absolute; top:-11px; left:-8px;}
+   #callout-table a {text-decoration: none; color: blue;}
+   #callout-table a:visited {text-decoration: none; color: blue;}
+   #overview-table a {text-decoration: none; color: black;}
+   #overview-table a:visited {text-decoration: none; color: black;}
+   #callout-table a:hover, #overview-table a:hover {text-decoration: underline;}
+   </style>
+   
+<style TYPE="text/css" MEDIA="print">
+<!--
+/* Hide navigation links and add space between header
+     and text in the printed version. Not valid for eBooks. */
+#idnav { display:none;	 }
+.topichead { padding: 5px 5px 20px 5px; }
+-->
+</style>   
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <script type="text/javascript">
+     HMSyncTOC("index.html", "creating_a_csv-file.htm");
+   </script>
+   <script type="text/javascript" src="highlight.js"></script>
+   <script type="text/javascript">
+     $(document).ready(function(){highlight();});
+   </script>
+</head>
+<body>
+<!--ZOOMSTOP-->
+
+<div id="idheader">
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0px;">
+  <tr>
+    <td align="left" class="topichead">
+      <p class="crumbs" id="idnav">
+        <a href="recipients_-_managing_customer.htm">Recipients - Managing customer data</a> &gt; <a href="import_function_for_recipient_.htm">Import function for recipient data</a>&nbsp;&gt;&nbsp;Creating a CSV-file    
+      </p>
+    </td>
+    <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
+        
+        
+          <a href="auto-import.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
+          </a>
+        
+        
+        <a href="import_function_for_recipient_.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
+        </a>
+        
+          <a href="export_function_for_recipient_.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <img name=next src="btn_next_n.gif" border=0 alt="Next page">
+          </a>
+        
+        
+    </td -->
+  </tr>
+</table>
+
+<!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
+  
+
+</div>  
+
+
+
+<div id="idcontent">
+  <div id="innerdiv"> 
+  <h3 class="p_Heading3"><span class="f_Heading3">Creating a CSV-file</span></h3>
+
+  <!--ZOOMRESTART-->
+  <p>Programs such as Excel have proven themselves for the management of tabular data. Excel can also import and process data in many formats. This is why this chapter describes how you can create a valid CSV file for the OpenEMM using Microsoft Excel.</p>
+<p>In the Excel table, each recipient has an own line. Each column corresponds to a field in the recipient database. The first line of the CSV file contains the field labels (see figure below). You must enter the field names in upper case exactly as in OpenEMM. In the cells themselves you may use both upper and lower case.</p>
+<p>Internally, OpenEMM manages all email addresses in small letters. When entering the email address you do not therefore have to take capitalization into account and all addresses can be entered directly using small letters.</p>
+<div class="p_ImageCaption"><div style="margin:0px auto 0px auto;width:1023px;padding:0px 0px 0px 0px"><img src="every_line_in_excel_matches.png" width="1023" height="533" style="border:none" alt="Fig. 4.24: Every line in Excel matches a recipient, every column a field." title="Fig. 4.24: Every line in Excel matches a recipient, every column a field." /><p style="text-align:center"><span class="f_ImageCaption">Fig. 4.24: Every line in Excel matches a recipient, every column a field.</span></p></div></div>
+<p><span style="font-weight: bold;">Important:</span> Please note that the columns <span style="font-weight: bold; color: #006fb9;">EMAIL</span> and if necessary <span style="font-weight: bold; color: #006fb9;">GENDER</span> and <span style="font-weight: bold; color: #006fb9;">MAILTYPE</span> are mandatory. All other columns are optional and can be set up as desired. In the column <span style="font-weight: bold; color: #006fb9;">GENDER</span> enter the gender of the recipient with <span style="font-style: italic;">0</span> (male), <span style="font-style: italic;">1</span> (female) and <span style="font-style: italic;">2</span> (unknown). In the column <span style="font-weight: bold; color: #006fb9;">MAILTYPE</span> enter numbers or text in the same way to indicate whether the recipient is to receive the text version (<span style="font-style: italic;">0</span>, <span style="font-style: italic;">txt</span> or <span style="font-style: italic;">text</span>), the HTML version (<span style="font-style: italic;">1</span> or <span style="font-style: italic;">HTML</span>), the Offline-HTML version (<span style="font-style: italic;">2</span>) or the M-HTML version (<span style="font-style: italic;">4</span>).</p>
+<p>When all recipient data is entered into your spreadsheet software, save the data in CSV format. To do so, called the menu point <span style="font-weight: bold; color: #006fb9;">File</span>/<span style="font-weight: bold; color: #006fb9;">Save</span> in Excel. Set the desired target directory. In the Data Type selection list, set <span style="font-weight: bold; color: #006fb9;">CSV</span> (or *.csv depending on the Excel version). <span style="font-weight: bold; color: #006fb9;">Save</span> stores the CSV data on the hard disk. Excel may point out that not all worksheets can be saved in CSV format. Since this does not play a role, confirm with <span style="font-weight: bold; color: #006fb9;">OK</span>.</p>
+<p>The CSV file that results is a simple text file which can be opened using any text program. The data for each recipient is stored in an own cell. The fields are marked by a separator character, for Excel this is a semicolon.</p>
+<div class="p_ImageCaption"><div style="margin:0px auto 0px auto;width:652px;padding:0px 0px 0px 0px"><img src="this_is_how_a_csv.png" width="652" height="328" style="border:none" alt="Fig. 4.25: This is how a CSV-File looks like in Windows Editor created by an Excel table." title="Fig. 4.25: This is how a CSV-File looks like in Windows Editor created by an Excel table." /><p style="text-align:center"><span class="f_ImageCaption">Fig. 4.25: This is how a CSV-File looks like in Windows Editor created by an Excel table.</span></p></div></div>
+
+  <!--ZOOMSTOP-->
+  </div>
+</div>
+
+<script type="text/javascript"> 
+<!-- 
+var lastSlashPos = document.URL.lastIndexOf("/") >
+document.URL.lastIndexOf("\\") ? document.URL.lastIndexOf("/") :
+document.URL.lastIndexOf("\\");
+if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4
+).toLowerCase() != "~hh" )
+{
+    nsrInit();
+}
+--> 
+</script> 
+</body>
+</html>

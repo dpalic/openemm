@@ -524,7 +524,7 @@ public class MailingSendAction extends StrutsActionBase {
 				AgnUtils.getAdmin(req).getCompanyID());
 		try {
             WebApplicationContext webApplicationContext = WebApplicationContextUtils.getRequiredWebApplicationContext(req.getSession().getServletContext());
-            aMailing.buildDependencies(false, webApplicationContext);
+            aMailing.buildDependencies(false, webApplicationContext, false);
 			links = aMailing.getTrackableLinks().values();
 
 		} catch (Exception e) {

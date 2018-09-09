@@ -1,6 +1,5 @@
-﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+﻿<!DOCTYPE HTML>
 <html>
-<!-- saved from url=(0029)http://www.helpandmanual.com/ -->
 <head>
    <title>Statistics - To gain a broad view &gt; IP overview</title>
    <meta name="generator" content="Help & Manual">
@@ -74,19 +73,19 @@ function toggleToggles() {
 .topichead { padding: 5px 5px 20px 5px; }
 -->
 </style>   
-<script type="text/javascript" src="helpman_topicinit.js"></script>
-<!-- Redirect browser to frame page if page is not in the content frame. -->
-<script type="text/javascript">
-<!--
-if (location.search.lastIndexOf("toc=0")<=0) {
-  if (parent.frames.length==0) { parent.location.href="index.html?ip_statistics.htm"; }
-  else { parent.quicksync('a5.5'); }
-}
-//-->
-</script>
-<script type="text/javascript" src="highlight.js"></script></head>
-<body onload="highlight();">
-<div id="hmpopupDiv" style="visibility:hidden; position:absolute; z-index:1000; "></div>
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <script type="text/javascript">
+     HMSyncTOC("index.html", "ip_statistics.htm");
+   </script>
+   <script type="text/javascript" src="highlight.js"></script>
+   <script type="text/javascript">
+     $(document).ready(function(){highlight();});
+   </script>
+</head>
+<body>
 <!--ZOOMSTOP-->
 
 <div id="idheader">
@@ -94,7 +93,7 @@ if (location.search.lastIndexOf("toc=0")<=0) {
   <tr>
     <td align="left" class="topichead">
       <p class="crumbs" id="idnav">
-        <a href="statistics___to_gain_a_broad_v.htm">Statistics - To gain a broad view</a>&nbsp;&gt;&nbsp;IP overview    
+        <a href="statistics_-_to_gain_a_broad_v.htm">Statistics - To gain a broad view</a>&nbsp;&gt;&nbsp;IP overview    
       </p>
     </td>
     <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
@@ -105,7 +104,7 @@ if (location.search.lastIndexOf("toc=0")<=0) {
           </a>
         
         
-        <a href="statistics___to_gain_a_broad_v.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <a href="statistics_-_to_gain_a_broad_v.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
         <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
         </a>
         
@@ -127,14 +126,14 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 <div id="idcontent">
   <div id="innerdiv"> 
-  <p class="p_Heading2"><span class="f_Heading2">IP overview</span></p>
+  <h2 class="p_Heading2"><span class="f_Heading2">IP overview</span></h2>
 
   <!--ZOOMRESTART-->
   <p>The purpose of IP overview is to determine which IP addresses recipients used to subscribe to a mailing list. OpenEMM shows the 20 top-ranking IP addresses. This statistical feature is meant to prevent fraud. There are lottery agencies who will register their paying members with all lotteries, raffles and promotions they can find. Since the members are not really interested in the promotion in question, such email data is worthless.</p>
 <p>Some agencies even use fraudulent email addresses; mails sent to such addresses will never be read. It is relatively easy to create an email domain so that the email address itself is no indicator for a scam. However, the agency usually has an IP address. If this IP address suddenly appears in the top 20 statistics, this could indicate fraud.</p>
 <p>The <span style="font-weight: bold; color: #006fb9;">IP address</span> shows the recipient’s IP address. In the <span style="font-weight: bold; color: #006fb9;">Recipients</span> column, the system lists how many subscribers used that address to register. Various drop-down lists can be used to narrow down the statistical base:</p>
-<div class="p_ImageCaption"><div style="margin:0 auto;width:935px;padding:0px"><img src="ip_statistic_show_which_ip.png" width="935" height="760" border="0" alt="Fig. 5.12: IP statistics show which IP addresses recipients used to register in your database."><p style="text-align:center"><span class="f_ImageCaption">Fig. 5.12: IP statistics show which IP addresses recipients used to register in your database.</span></p></div></div>
-<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">1.</span></td><td><span class="f_Zahlen">The </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Target group</span><span class="f_Zahlen"> drop-down list selects members of your target group.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">2.</span></td><td><span class="f_Zahlen">The </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Mailing list</span><span class="f_Zahlen"> drop-down list selects only subscribers of a particular mailing list for statistical evaluation. Both selection criteria can be combined.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">3.</span></td><td><span class="f_Zahlen">To finish, OpenEMM will recalculate all statistical data after clicking on the </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">OK</span><span class="f_Zahlen"> button.</span></td></tr></table></div>
+<div class="p_ImageCaption"><div style="margin:0px auto 0px auto;width:938px;padding:0px 0px 0px 0px"><img src="ip_statistic_show_which_ip.png" width="938" height="529" style="border:none" alt="Fig. 5.12: IP statistics show which IP addresses recipients used to register in your database." title="Fig. 5.12: IP statistics show which IP addresses recipients used to register in your database." /><p style="text-align:center"><span class="f_ImageCaption">Fig. 5.12: IP statistics show which IP addresses recipients used to register in your database.</span></p></div></div>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="border:none;border-spacing:0px;padding:0px;line-height: normal;"><tr valign="baseline" style="vertical-align:baseline"><td style="border:none;width:16px"><span style="font-size:11pt; font-family: 'Arial';color:#000000;">1.</span></td><td style="border:none"><span class="f_Zahlen">The </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Target group</span><span class="f_Zahlen"> drop-down list selects members of your target group.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="border:none;border-spacing:0px;padding:0px;line-height: normal;"><tr valign="baseline" style="vertical-align:baseline"><td style="border:none;width:16px"><span style="font-size:11pt; font-family: 'Arial';color:#000000;">2.</span></td><td style="border:none"><span class="f_Zahlen">The </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Mailing list</span><span class="f_Zahlen"> drop-down list selects only subscribers of a particular mailing list for statistical evaluation. Both selection criteria can be combined.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="border:none;border-spacing:0px;padding:0px;line-height: normal;"><tr valign="baseline" style="vertical-align:baseline"><td style="border:none;width:16px"><span style="font-size:11pt; font-family: 'Arial';color:#000000;">3.</span></td><td style="border:none"><span class="f_Zahlen">To finish, OpenEMM will recalculate all statistical data after clicking on the </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">OK</span><span class="f_Zahlen"> button.</span></td></tr></table></div>
   <!--ZOOMSTOP-->
   </div>
 </div>

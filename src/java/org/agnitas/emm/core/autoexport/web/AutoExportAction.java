@@ -1,22 +1,30 @@
 package org.agnitas.emm.core.autoexport.web;
 
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.agnitas.beans.ExportPredef;
 import org.agnitas.emm.core.autoexport.bean.AutoExport;
 import org.agnitas.emm.core.autoexport.forms.AutoExportForm;
 import org.agnitas.emm.core.autoexport.service.AutoExportService;
 import org.agnitas.util.AgnUtils;
+import org.agnitas.util.FtpHelper;
 import org.agnitas.util.SFtpHelper;
 import org.agnitas.web.DispatchBaseAction;
-import org.apache.struts.action.*;
+import org.apache.log4j.Logger;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
-
 public class AutoExportAction  extends DispatchBaseAction {
+    private static final transient Logger logger = Logger.getLogger(AutoExportAction.class);
 
     private AutoExportService autoExportService;
 
@@ -48,22 +56,42 @@ public class AutoExportAction  extends DispatchBaseAction {
 			return mapping.findForward("logon");
 		}
 		AutoExportForm autoExportForm = (AutoExportForm) form;
-		SFtpHelper sftpHelper = null;
 		boolean connectionStatusOK = false;
-		try {
-			sftpHelper = new SFtpHelper(autoExportForm.getAutoExport().getFileServer());
-			if (autoExportForm.getAutoExport().isAllowUnknownHostKeys()) {
-				sftpHelper.setAllowUnknownHostKeys(true);
+		
+		if (autoExportForm.getAutoExport().getFileServer().toLowerCase().startsWith("ftp://")) {
+        	// if configured so, send via FTP
+			FtpHelper ftpHelper = null;
+			try {
+				ftpHelper = new FtpHelper(autoExportForm.getAutoExport().getFileServer());
+				ftpHelper.connect();
+				connectionStatusOK = true;
+			} catch (Exception e) {
+				logger.error("AutoExportAction - error while connecting to ftp", e);
+				connectionStatusOK = false;
+			} finally {
+				if (ftpHelper != null) {
+					ftpHelper.close();
+				}
 			}
-			sftpHelper.connect();
-			connectionStatusOK = true;
-		} catch (Exception e) {
-			connectionStatusOK = false;
-		} finally {
-			if (sftpHelper != null) {
-				sftpHelper.close();
-			}
-		}
+        } else {
+        	// default: send via SFTP
+        	SFtpHelper sftpHelper = null;
+    		try {
+    			sftpHelper = new SFtpHelper(autoExportForm.getAutoExport().getFileServer());
+    			if (autoExportForm.getAutoExport().isAllowUnknownHostKeys()) {
+    				sftpHelper.setAllowUnknownHostKeys(true);
+    			}
+    			sftpHelper.connect();
+    			connectionStatusOK = true;
+    		} catch (Exception e) {
+    			logger.error("AutoExportAction - error while connecting to sftp", e);
+    			connectionStatusOK = false;
+    		} finally {
+    			if (sftpHelper != null) {
+    				sftpHelper.close();
+    			}
+    		}
+        }
 		
 		loadAutoExport(form, request);
 		prepareViewPage(form, request);

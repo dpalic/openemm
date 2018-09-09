@@ -1,6 +1,5 @@
-﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+﻿<!DOCTYPE HTML>
 <html>
-<!-- saved from url=(0029)http://www.helpandmanual.com/ -->
 <head>
    <title>Verwaltung - Das System konfigurieren &gt; Felder verwalten</title>
    <meta name="generator" content="Help & Manual">
@@ -74,19 +73,19 @@ function toggleToggles() {
 .topichead { padding: 5px 5px 20px 5px; }
 -->
 </style>   
-<script type="text/javascript" src="helpman_topicinit.js"></script>
-<!-- Redirect browser to frame page if page is not in the content frame. -->
-<script type="text/javascript">
-<!--
-if (location.search.lastIndexOf("toc=0")<=0) {
-  if (parent.frames.length==0) { parent.location.href="index.html?managing_profile_fields.htm"; }
-  else { parent.quicksync('a10.1'); }
-}
-//-->
-</script>
-<script type="text/javascript" src="highlight.js"></script></head>
-<body onload="highlight();">
-<div id="hmpopupDiv" style="visibility:hidden; position:absolute; z-index:1000; "></div>
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <script type="text/javascript">
+     HMSyncTOC("index.html", "managing_profile_fields.htm");
+   </script>
+   <script type="text/javascript" src="highlight.js"></script>
+   <script type="text/javascript">
+     $(document).ready(function(){highlight();});
+   </script>
+</head>
+<body>
 <!--ZOOMSTOP-->
 
 <div id="idheader">
@@ -94,18 +93,18 @@ if (location.search.lastIndexOf("toc=0")<=0) {
   <tr>
     <td align="left" class="topichead">
       <p class="crumbs" id="idnav">
-        <a href="settings___configuring_the_sys.htm">Verwaltung - Das System konfigurieren</a>&nbsp;&gt;&nbsp;Felder verwalten    
+        <a href="settings_-_configuring_the_sys.htm">Verwaltung - Das System konfigurieren</a>&nbsp;&gt;&nbsp;Felder verwalten    
       </p>
     </td>
     <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
         
         
-          <a href="settings___configuring_the_sys.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <a href="subscription_via_e-mail.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
           <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
           </a>
         
         
-        <a href="settings___configuring_the_sys.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <a href="settings_-_configuring_the_sys.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
         <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
         </a>
         
@@ -127,14 +126,14 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 <div id="idcontent">
   <div id="innerdiv"> 
-  <p class="p_Heading2"><span class="f_Heading2">Felder verwalten</span></p>
+  <h2 class="p_Heading2"><span class="f_Heading2">Felder verwalten</span></h2>
 
   <!--ZOOMRESTART-->
   <p>Zu jedem Empfänger Ihrer Mailings verwaltet der OpenEMM in seiner Datenbank ein Profil. Das Empfängerprofil enthält standardmäßig Daten wie Name und Titel sowie natürlich die E-Mail-Adresse. Diese Daten sind für viele Anwendungen nicht ausreichend. Wenn Sie beispielsweise Ihren Kunden per E-Mail zum Geburtstag gratulieren wollen, müssen Sie zusätzlich das Geburtsdatum speichern. Für Mailings per Fax oder Print sind zusätzlich Faxnummer und Anschrift erforderlich. Oder Sie erfassen zu jedem Kunden, welche speziellen Interessen er hat.</p>
-<div class="p_ImageCaption"><div style="margin:0 auto;width:938px;padding:0px"><img src="die_profildatenbank_ist_um_eine_reihe.png" width="938" height="407" border="0" alt="Abb. 13.1: Die Profildatenbank ist um eine Reihe zusätzlicher Felder erweitert."><p style="text-align:center"><span class="f_ImageCaption">Abb. 13.1: Die Profildatenbank ist um eine Reihe zusätzlicher Felder erweitert.</span></p></div></div>
+<div class="p_ImageCaption"><div style="margin:0px auto 0px auto;width:935px;padding:0px 0px 0px 0px"><img src="die_profildatenbank_ist_um_eine_reihe.png" width="935" height="315" style="border:none" alt="Abb. 10.6: Die Profildatenbank ist um eine Reihe zusätzlicher Felder erweitert." title="Abb. 10.6: Die Profildatenbank ist um eine Reihe zusätzlicher Felder erweitert." /><p style="text-align:center"><span class="f_ImageCaption">Abb. 10.6: Die Profildatenbank ist um eine Reihe zusätzlicher Felder erweitert.</span></p></div></div>
 <p>Da sich die erforderlichen Felder in der Profildatenbank je nach Verwendungszweck unterscheiden, bietet Ihnen der OpenEMM hier viel Freiheit.</p>
 <p>Es stehen verschiedene Datentypen zur Verfügung. Ein Datum wie einen Geburtstag speichert der OpenEMM auf andere Weise als den Ortsnamen einer Anschrift. Die Änderungen an der Struktur der Profildatenbank erfassen grundsätzlich alle Empfänger in Ihrer Datenbank. Sie sollten deshalb genau planen, welche Felder Sie benötigen. Es ist kein Problem, die Profildatenbank jederzeit um zusätzliche Felder zu erweitern. Löschen Sie aber ein Feld, so kann das Auswirkungen auf verschiedenste Bereiche des OpenEMM haben.</p>
-<p>Eine umfassende Einführung in die Anlage von Profilfeldern und mehrere praktische Beispiel finden Sie in Kapitel <a href="maintain_recipients_profile_wi.htm">Kundenprofile pflegen mit Aktionen</a>.</p>
+<p>Eine umfassende Einführung in die Anlage von Profilfeldern und mehrere praktische Beispiel finden Sie in Kapitel <a href="maintain_recipients_profile_wi.htm" class="topiclink">Kundenprofile pflegen mit Aktionen</a>.</p>
 
   <!--ZOOMSTOP-->
   </div>

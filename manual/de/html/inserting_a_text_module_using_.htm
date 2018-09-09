@@ -1,6 +1,5 @@
-﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+﻿<!DOCTYPE HTML>
 <html>
-<!-- saved from url=(0029)http://www.helpandmanual.com/ -->
 <head>
    <title>Mailings - Newsletter versenden &gt; Schablonen - Wiederverwendbare Bausteine &gt; Textbausteine verwenden &gt; Textbausteine mit AGNITAS-Tags einfügen</title>
    <meta name="generator" content="Help & Manual">
@@ -74,19 +73,19 @@ function toggleToggles() {
 .topichead { padding: 5px 5px 20px 5px; }
 -->
 </style>   
-<script type="text/javascript" src="helpman_topicinit.js"></script>
-<!-- Redirect browser to frame page if page is not in the content frame. -->
-<script type="text/javascript">
-<!--
-if (location.search.lastIndexOf("toc=0")<=0) {
-  if (parent.frames.length==0) { parent.location.href="index.html?inserting_a_text_module_using_.htm"; }
-  else { parent.quicksync('a3.3.3.1'); }
-}
-//-->
-</script>
-<script type="text/javascript" src="highlight.js"></script></head>
-<body onload="highlight();">
-<div id="hmpopupDiv" style="visibility:hidden; position:absolute; z-index:1000; "></div>
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <script type="text/javascript">
+     HMSyncTOC("index.html", "inserting_a_text_module_using_.htm");
+   </script>
+   <script type="text/javascript" src="highlight.js"></script>
+   <script type="text/javascript">
+     $(document).ready(function(){highlight();});
+   </script>
+</head>
+<body>
 <!--ZOOMSTOP-->
 
 <div id="idheader">
@@ -94,7 +93,7 @@ if (location.search.lastIndexOf("toc=0")<=0) {
   <tr>
     <td align="left" class="topichead">
       <p class="crumbs" id="idnav">
-        <a href="mailings___sending_out_newslet.htm">Mailings - Newsletter versenden</a> &gt; <a href="templates___re_usable_text_mod.htm">Schablonen - Wiederverwendbare Bausteine</a> &gt; <a href="using_text_modules.htm">Textbausteine verwenden</a>&nbsp;&gt;&nbsp;Textbausteine mit AGNITAS-Tags einfügen    
+        <a href="mailings_-_sending_out_newslet.htm">Mailings - Newsletter versenden</a> &gt; <a href="templates_-_re-usable_text_mod.htm">Schablonen - Wiederverwendbare Bausteine</a> &gt; <a href="using_text_modules.htm">Textbausteine verwenden</a>&nbsp;&gt;&nbsp;Textbausteine mit AGNITAS-Tags einfügen    
       </p>
     </td>
     <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
@@ -127,30 +126,30 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 <div id="idcontent">
   <div id="innerdiv"> 
-  <p class="p_Heading4"><span class="f_Heading4">Textbausteine mit AGNITAS-Tags einfügen</span></p>
+  <h4 class="p_Heading4"><span class="f_Heading4">Textbausteine mit AGNITAS-Tags einfügen</span></h4>
 
   <!--ZOOMRESTART-->
-  <p>Im Prinzip arbeitet eine Schablone genauso wie ein Formular: Es gibt feste Bereiche und Eingabefelder bzw. Platzhalter. Der Text, den Sie im Eingabefeld eingeben, erscheint später in der fertigen E-Mail bei den Empfängern. Diesen Text dürfen Sie personalisieren und zum Beispiel eine individuelle Begrüßung einbauen. Details dazu lesen Sie im Kapitel <a href="personalisierte_mailings_gesta.htm">Personalisierte Mailings gestalten</a> über Mailings nach.</p>
-<p>Wo bleibt aber die versprochene Flexibilität der Schablonen? Das Geheimnis liegt in der Verbindung einer Schablone mit verschiedenen Textbausteinen in einem Mailing. In den Text der Schablone tragen Sie AGNITAS-Tags ein, die als Platzhalter jeweils einen ganz bestimmten Textbaustein definieren. Den Inhalt der Textbausteine definieren Sie meist nicht mit der Schablone, sondern später beim Anlegen eines neuen Mailings. (Sollte der Inhalt der Textbausteine über mehrere Newsletter unverändert bleiben, können Sie den Inhalt der Textbausteine auch gleich in der Schablone definieren, siehe <a href="further_details_for_creating_t.htm">Weitere Details für Schablonen anlegen</a>).</p>
+  <p>Im Prinzip arbeitet eine Schablone genauso wie ein Formular: Es gibt feste Bereiche und Eingabefelder bzw. Platzhalter. Der Text, den Sie im Eingabefeld eingeben, erscheint später in der fertigen E-Mail bei den Empfängern. Diesen Text dürfen Sie personalisieren und zum Beispiel eine individuelle Begrüßung einbauen. Details dazu lesen Sie im Kapitel <a href="personalisierte_mailings_gesta.htm" class="topiclink">Personalisierte Mailings gestalten</a> über Mailings nach.</p>
+<p>Wo bleibt aber die versprochene Flexibilität der Schablonen? Das Geheimnis liegt in der Verbindung einer Schablone mit verschiedenen Textbausteinen in einem Mailing. In den Text der Schablone tragen Sie AGNITAS-Tags ein, die als Platzhalter jeweils einen ganz bestimmten Textbaustein definieren. Den Inhalt der Textbausteine definieren Sie meist nicht mit der Schablone, sondern später beim Anlegen eines neuen Mailings. (Sollte der Inhalt der Textbausteine über mehrere Newsletter unverändert bleiben, können Sie den Inhalt der Textbausteine auch gleich in der Schablone definieren, siehe <a href="further_details_for_creating_t.htm" class="topiclink">Weitere Details für Schablonen anlegen</a>).</p>
 <p>Ein einfaches Beispiel verdeutlicht den Zusammenhang. Der folgende Text gehört in das Eingabefeld <span style="font-weight: bold; color: #006fb9;">Text-Version</span> im Eingabedialog für eine Schablone:</p>
-<p class="p_BeispieltextQuelltext"><span class="f_BeispieltextQuelltext">[agnTITLE type=1</span><span class="f_Punkte" style="font-style: italic;">/</span><span class="f_BeispieltextQuelltext">],</span><br>
-<span class="f_BeispieltextQuelltext">Willkommen bei den Wochenschnäppchen Ihres SchuhShops!</span><br>
-<span class="f_BeispieltextQuelltext">[agnDYN name="Haupttext"/]</span><br>
-<span class="f_BeispieltextQuelltext">&nbsp;</span><br>
-<span class="f_BeispieltextQuelltext">Mit freundlichen Grüßen</span><br>
+<p class="p_BeispieltextQuelltext"><span class="f_BeispieltextQuelltext">[agnTITLE type=1</span><span class="f_Punkte" style="font-style: italic;">/</span><span class="f_BeispieltextQuelltext">],</span><br />
+<span class="f_BeispieltextQuelltext">Willkommen bei den Wochenschnäppchen Ihres SchuhShops!</span><br />
+<span class="f_BeispieltextQuelltext">[agnDYN name=&quot;Haupttext&quot;/]</span><br />
+<span class="f_BeispieltextQuelltext">&nbsp;</span><br />
+<span class="f_BeispieltextQuelltext">Mit freundlichen Grüßen</span><br />
 <span class="f_BeispieltextQuelltext">Ihr SchuhShop</span></p>
-<p>Die erste Zeile fügt eine personalisierte Begrüßung für den Empfänger ein (siehe Kapitel <a href="personalisierte_mailings_gesta.htm">Personalisierte Mailings gestalten</a>). Die zweite Zeile ist ganz normaler Text, der OpenEMM übernimmt sie unverändert in die fertigen E-Mails. Die dritte Zeile ist das Geheimnis der Schablonen: <span style="font-style: italic;">[agnDYN name="Haupttext"/]</span> bindet den Textbaustein namens <span style="font-style: italic;">Haupttext</span> in die fertige E-Mail ein. Die Schablone "weiß" noch nicht, welcher Text hier eingefügt wird – genau das ist ja der Sinn der Schablone. Den Inhalt dieses Textbausteins müssen Sie später bei der Definition eines neuen Mailings unter dem Menüpunkt <span style="font-weight: bold; color: #006fb9;">Inhalt</span> eingeben. Dort finden Sie alphabetisch bzw. numerisch aufgelistet alle in der Schablone definierten Textbausteine. Die restlichen Zeilen einschließlich der Leerzeile übernimmt das System wieder unverändert in die fertigen E-Mails.</p>
+<p>Die erste Zeile fügt eine personalisierte Begrüßung für den Empfänger ein (siehe Kapitel <a href="personalisierte_mailings_gesta.htm" class="topiclink">Personalisierte Mailings gestalten</a>). Die zweite Zeile ist ganz normaler Text, der OpenEMM übernimmt sie unverändert in die fertigen E-Mails. Die dritte Zeile ist das Geheimnis der Schablonen: <span style="font-style: italic;">[agnDYN name=&quot;Haupttext&quot;/]</span> bindet den Textbaustein namens <span style="font-style: italic;">Haupttext</span> in die fertige E-Mail ein. Die Schablone &quot;weiß&quot; noch nicht, welcher Text hier eingefügt wird – genau das ist ja der Sinn der Schablone. Den Inhalt dieses Textbausteins müssen Sie später bei der Definition eines neuen Mailings unter dem Menüpunkt <span style="font-weight: bold; color: #006fb9;">Inhalt</span> eingeben. Dort finden Sie alphabetisch bzw. numerisch aufgelistet alle in der Schablone definierten Textbausteine. Die restlichen Zeilen einschließlich der Leerzeile übernimmt das System wieder unverändert in die fertigen E-Mails.</p>
 <p><span style="font-weight: bold;">Bitte beachten Sie:</span> Das AGNITAS-Tag verwendet folgende Schreibweise: Vor der schließenden eckigen Klammer steht ein Schrägstrich. Der Schrägstrich zeigt dem OpenEMM an, dass das Tag abgeschlossen ist. Warum das notwendig ist, erhellt das nächste Kapitel.</p>
 <p>Das Ergebnis in der fertigen E-Mail könnte so aussehen (je nach Empfänger und Inhalt des Textbausteins <span style="font-style: italic;">Haupttext</span>):</p>
-<p class="p_BeispieltextQuelltext"><span class="f_BeispieltextQuelltext">Sehr geehrter Herr Müller,</span><br>
-<span class="f_BeispieltextQuelltext">Willkommen bei den Wochenschnäppchen Ihres SchuhShops!</span><br>
-<span class="f_BeispieltextQuelltext">Sie freuen sich schon darauf, endlich Ihre Winterstiefel im Schrank verschwinden zu lassen? Wir haben Ihre neuen Sandalen für den warmen Frühling. Top-aktuelle Modelle für Schuhgrößen von 39 bis 45 finden Sie in unserem Online-Shop. Werfen Sie unter</span><br>
-<span class="f_BeispieltextQuelltext">&nbsp;</span><br>
-<span class="f_BeispieltextQuelltext"><a href="http://www.schuhshop.org/sandalen" target="_blank" class="weblink">http://www.schuhshop.org/sandalen</a></span><br>
-<span class="f_BeispieltextQuelltext">&nbsp;</span><br>
-<span class="f_BeispieltextQuelltext">einen Blick auf die Mode der Saison.</span><br>
-<span class="f_BeispieltextQuelltext">&nbsp;</span><br>
-<span class="f_BeispieltextQuelltext">Mit freundlichen Grüßen</span><br>
+<p class="p_BeispieltextQuelltext"><span class="f_BeispieltextQuelltext">Sehr geehrter Herr Müller,</span><br />
+<span class="f_BeispieltextQuelltext">Willkommen bei den Wochenschnäppchen Ihres SchuhShops!</span><br />
+<span class="f_BeispieltextQuelltext">Sie freuen sich schon darauf, endlich Ihre Winterstiefel im Schrank verschwinden zu lassen? Wir haben Ihre neuen Sandalen für den warmen Frühling. Top-aktuelle Modelle für Schuhgrößen von 39 bis 45 finden Sie in unserem Online-Shop. Werfen Sie unter</span><br />
+<span class="f_BeispieltextQuelltext">&nbsp;</span><br />
+<span class="f_BeispieltextQuelltext"><a href="http://www.schuhshop.org/sandalen" target="_blank" class="weblink">http://www.schuhshop.org/sandalen</a></span><br />
+<span class="f_BeispieltextQuelltext">&nbsp;</span><br />
+<span class="f_BeispieltextQuelltext">einen Blick auf die Mode der Saison.</span><br />
+<span class="f_BeispieltextQuelltext">&nbsp;</span><br />
+<span class="f_BeispieltextQuelltext">Mit freundlichen Grüßen</span><br />
 <span class="f_BeispieltextQuelltext">Ihr SchuhShop</span></p>
 <p>Sie dürfen so viele Textbausteine einfügen wie Sie wollen. Es macht durchaus Sinn, für jedes Schnäppchen (um im Beispiel zu bleiben) einen eigenen Textbaustein anzulegen. Um sich die Arbeit zu erleichtern, sollten Sie sich möglichst aussagekräftige und eindeutige Namen für die Textbausteine überlegen.</p>
 

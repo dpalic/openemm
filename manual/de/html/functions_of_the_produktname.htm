@@ -1,6 +1,5 @@
-﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+﻿<!DOCTYPE HTML>
 <html>
-<!-- saved from url=(0029)http://www.helpandmanual.com/ -->
 <head>
    <title>OpenEMM - Die Grundlagen &gt; Arbeitsweise des OpenEMM</title>
    <meta name="generator" content="Help & Manual">
@@ -74,19 +73,19 @@ function toggleToggles() {
 .topichead { padding: 5px 5px 20px 5px; }
 -->
 </style>   
-<script type="text/javascript" src="helpman_topicinit.js"></script>
-<!-- Redirect browser to frame page if page is not in the content frame. -->
-<script type="text/javascript">
-<!--
-if (location.search.lastIndexOf("toc=0")<=0) {
-  if (parent.frames.length==0) { parent.location.href="index.html?functions_of_the_produktname.htm"; }
-  else { parent.quicksync('a1.2'); }
-}
-//-->
-</script>
-<script type="text/javascript" src="highlight.js"></script></head>
-<body onload="highlight();">
-<div id="hmpopupDiv" style="visibility:hidden; position:absolute; z-index:1000; "></div>
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <script type="text/javascript">
+     HMSyncTOC("index.html", "functions_of_the_produktname.htm");
+   </script>
+   <script type="text/javascript" src="highlight.js"></script>
+   <script type="text/javascript">
+     $(document).ready(function(){highlight();});
+   </script>
+</head>
+<body>
 <!--ZOOMSTOP-->
 
 <div id="idheader">
@@ -94,7 +93,7 @@ if (location.search.lastIndexOf("toc=0")<=0) {
   <tr>
     <td align="left" class="topichead">
       <p class="crumbs" id="idnav">
-        <a href="produktname___the_basics.htm">OpenEMM - Die Grundlagen</a>&nbsp;&gt;&nbsp;Arbeitsweise des OpenEMM    
+        <a href="produktname_-_the_basics.htm">OpenEMM - Die Grundlagen</a>&nbsp;&gt;&nbsp;Arbeitsweise des OpenEMM    
       </p>
     </td>
     <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
@@ -105,7 +104,7 @@ if (location.search.lastIndexOf("toc=0")<=0) {
           </a>
         
         
-        <a href="produktname___the_basics.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <a href="produktname_-_the_basics.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
         <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
         </a>
         
@@ -127,11 +126,12 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 <div id="idcontent">
   <div id="innerdiv"> 
-  <p class="p_Heading2"><span class="f_Heading2">Arbeitsweise des OpenEMM</span></p>
+  <h2 class="p_Heading2"><span class="f_Heading2">Arbeitsweise des OpenEMM</span></h2>
 
   <!--ZOOMRESTART-->
   <p>Der OpenEMM der AGNITAS AG ist so geplant, dass Sie flexibel, schnell und zielorientiert Newsletter an Ihre Kunden versenden.</p>
-<p>Zunächst übertragen Sie vorhandene E-Mail-Adressen in die Datenbank des OpenEMM.Neue E-Mail-Adressen ergänzen Sie selbst über die Importfunktion, die Web-Oberfläche oder überlassen die Arbeit den Interessenten. Denn jeder Kunde und Interessent kann sich über eine Webschnittstelle zu Ihrem Newsletter anmelden, jederzeit seine eigenen Angaben modifizieren oder aber sich von Ihrem Newsletter abmelden. Um Ihrem Kunden zu suggerieren, dass er sich immer noch auf Ihrer Website befindet, binden Sie die Webschnittstelle auf Ihrer Site in einem Frame ein. Die erste Anmelde-Seite kann dabei noch auf Ihrem Server liegen. Jeder Eintrag der Daten findet jedoch direkt über einen geschützten Zugang auf dem OpenEMM-Server statt.</p>
+<p>Zunächst übertragen Sie vorhandene E-Mail-Adressen in die Datenbank des OpenEMM.</p>
+<p>Neue E-Mail-Adressen ergänzen Sie selbst über die Importfunktion, die Web-Oberfläche oder überlassen die Arbeit den Interessenten. Denn jeder Kunde und Interessent kann sich über eine Webschnittstelle zu Ihrem Newsletter anmelden, jederzeit seine eigenen Angaben modifizieren oder aber sich von Ihrem Newsletter abmelden. Um Ihrem Kunden zu suggerieren, dass er sich immer noch auf Ihrer Website befindet, binden Sie die Webschnittstelle auf Ihrer Site in einem Frame ein. Die erste Anmelde-Seite kann dabei noch auf Ihrem Server liegen. Jeder Eintrag der Daten findet jedoch direkt über einen geschützten Zugang auf dem OpenEMM-Server statt.</p>
 <p>Die Daten, die der Interessent über die Webschnittstelle eingibt, werden sofort in Ihrer Datenbank gespeichert, die sich auf dem OpenEMM-Server befindet. Jeder Newsletter-Empfänger erhält dabei eine eigene, ihm zugewiesene ID. Durch diese ID erhält er den Zugang zu seinen eigenen Daten, die er selbst jederzeit über die Webschnittstelle pflegen kann.</p>
 <p>Über den speziell für Sie eingerichteten Webzugang können Sie nun die Daten jedes einzelnen Kunden abrufen, modifizieren sowie kundenspezifische Seitenabfragen nachvollziehen. Der OpenEMM stellt Ihnen dazu umfangreiche Statistiken in grafischer Darstellung zur Verfügung, die Ihnen eine mailing-bezogene Auswertung erlauben.</p>
 

@@ -1,8 +1,7 @@
-﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+﻿<!DOCTYPE HTML>
 <html>
-<!-- saved from url=(0029)http://www.helpandmanual.com/ -->
 <head>
-   <title>Formulare &amp; Aktionen &gt; Formular - Selbstverwaltung für Empfänger &gt; Formulare &gt; Beispiel Formular: Anmeldung mit Double-Opt-In &gt; Neue Aktionen anlegen</title>
+   <title>Sites &amp; Actions &gt; Formular - Selbstverwaltung für Empfänger &gt; Formulare &gt; Beispiel Formular: Anmeldung mit Double-Opt-In &gt; Neue Aktionen anlegen</title>
    <meta name="generator" content="Help & Manual">
    <meta name="keywords" content="">
    <meta name="description" content="Neue Aktionen anlegen">
@@ -74,19 +73,19 @@ function toggleToggles() {
 .topichead { padding: 5px 5px 20px 5px; }
 -->
 </style>   
-<script type="text/javascript" src="helpman_topicinit.js"></script>
-<!-- Redirect browser to frame page if page is not in the content frame. -->
-<script type="text/javascript">
-<!--
-if (location.search.lastIndexOf("toc=0")<=0) {
-  if (parent.frames.length==0) { parent.location.href="index.html?creating_new_actions.htm"; }
-  else { parent.quicksync('a8.1.2.5.2'); }
-}
-//-->
-</script>
-<script type="text/javascript" src="highlight.js"></script></head>
-<body onload="highlight();">
-<div id="hmpopupDiv" style="visibility:hidden; position:absolute; z-index:1000; "></div>
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <script type="text/javascript">
+     HMSyncTOC("index.html", "creating_new_actions.htm");
+   </script>
+   <script type="text/javascript" src="highlight.js"></script>
+   <script type="text/javascript">
+     $(document).ready(function(){highlight();});
+   </script>
+</head>
+<body>
 <!--ZOOMSTOP-->
 
 <div id="idheader">
@@ -94,13 +93,13 @@ if (location.search.lastIndexOf("toc=0")<=0) {
   <tr>
     <td align="left" class="topichead">
       <p class="crumbs" id="idnav">
-        <a href="sites__actions.htm">Formulare &amp; Aktionen</a> &gt; <a href="forms___recipient_management.htm">Formular - Selbstverwaltung für Empfänger</a> &gt; <a href="forms.htm">Formulare</a> &gt; <a href="example_subscribing_with_doubl.htm">Beispiel Formular: Anmeldung mit Double-Opt-In</a>&nbsp;&gt;&nbsp;Neue Aktionen anlegen    
+        <a href="sites__actions.htm">Sites &amp; Actions</a> &gt; <a href="forms_-_recipient_management.htm">Formular - Selbstverwaltung für Empfänger</a> &gt; <a href="forms.htm">Formulare</a> &gt; <a href="example_subscribing_with_doubl.htm">Beispiel Formular: Anmeldung mit Double-Opt-In</a>&nbsp;&gt;&nbsp;Neue Aktionen anlegen    
       </p>
     </td>
     <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
         
         
-          <a href="create_an_action_based_mailing.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <a href="create_an_action-based_mailing.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
           <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
           </a>
         
@@ -127,12 +126,12 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 <div id="idcontent">
   <div id="innerdiv"> 
-  <p class="p_Heading5"><span class="f_Heading5">Neue Aktionen anlegen</span></p>
+  <h5 class="p_Heading5"><span class="f_Heading5">Neue Aktionen anlegen</span></h5>
 
   <!--ZOOMRESTART-->
-  <p>Nachdem das Mailing fertig ist, legen Sie die drei Aktionen für das Anmelden und Bestätigen an. Die Aktion zum Anmelden ist im Prinzip wie bei einem normalen Anmeldevorgang in Kapitel <a href="creating_a_form_to_enter_data.htm">Formular zur Dateneingabe anlegen</a> aufgebaut. Bei allen drei Aktionen sollten Sie die Option <span style="font-weight: bold; color: #006fb9;">nur für Formulare</span> einstellen, das erleichtert Ihnen später die Pflege Ihrer Aktionen.</p>
-<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">1.</span></td><td><span class="f_Zahlen">Legen Sie eine neue Aktion mit dem Namen </span><span class="f_Zahlen" style="font-style: italic;">Double-Opt-In: Anmeldung</span><span class="f_Zahlen"> (oder ähnlich) an. Wichtig ist vor allem, dass der Name eindeutig ist. Aktivieren Sie dabei die Option </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Double-Opt-In verwenden</span><span class="f_Zahlen">.</span></td></tr></table></div><div class="p_ImageCaption"><div style="margin:0 auto;width:934px;padding:0px"><img src="diese_aktion_sichert_die_neuen_empfaengerdaten.png" width="934" height="452" border="0" alt="Abb. 9.13: Diese Aktion sichert die neuen Empfängerdaten in der Datenbank, markiert sie aber als gesperrt."><p style="text-align:center"><span class="f_ImageCaption">Abb. 9.13: Diese Aktion sichert die neuen Empfängerdaten in der Datenbank, markiert sie aber als gesperrt.</span></p></div></div>
-<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">2.</span></td><td><span class="f_Zahlen">Die zweite Aktion soll das aktionsgesteuerte Mailing auslösen. Erzeugen Sie eine neue Aktion mit dem Namen </span><span class="f_Zahlen" style="font-style: italic;">Double-Opt-In: E-Mail verschicken</span><span class="f_Zahlen">. In der Auswahlliste </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Typ</span><span class="f_Zahlen"> wählen Sie den Eintrag </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Aktionsbasiertes Mailing versenden</span><span class="f_Zahlen">. Mit der Schaltfläche </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Speichern</span><span class="f_Zahlen"> übergeben Sie die Daten an den OpenEMM.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">3.</span></td><td><span class="f_Zahlen">Nun wählen Sie unter </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Schritte</span><span class="f_Zahlen"> im Bereich </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">1</span><span class="f_Zahlen">. </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Versand</span><span class="f_Zahlen"> in der Auswahlliste </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Mailing</span><span class="f_Zahlen"> das vorhin definierte Mailing </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Double: Bestätigung</span><span class="f_Zahlen"> aus. Schließen Sie die Aktion mit der Schaltfläche </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Speichern</span><span class="f_Zahlen"> ab.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">4.</span></td><td><span class="f_Zahlen">Die dritte Aktion dient zur Bestätigung des Double-Opt-In. Legen Sie wieder eine neue Aktion mit dem Namen</span><span class="f_Zahlen" style="font-style: italic;"> Double-Opt-In: Bestätigung</span><span class="f_Zahlen"> an. In der Auswahlliste </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Typ</span><span class="f_Zahlen"> stellen Sie auf </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Double-Opt-In Bestätigung</span><span class="f_Zahlen"> ein. Beenden Sie die Definition mit der Schaltfläche </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Speichern</span><span class="f_Zahlen">. Damit ist die Definition der Aktionen abgeschlossen.</span></td></tr></table></div>
+  <p>Nachdem das Mailing fertig ist, legen Sie die drei Aktionen für das Anmelden und Bestätigen an. Die Aktion zum Anmelden ist im Prinzip wie bei einem normalen Anmeldevorgang in Kapitel <a href="creating_a_form_to_enter_data.htm" class="topiclink">Formular zur Dateneingabe anlegen</a> aufgebaut. Bei allen drei Aktionen sollten Sie die Option <span style="font-weight: bold; color: #006fb9;">nur für Formulare</span> einstellen, das erleichtert Ihnen später die Pflege Ihrer Aktionen.</p>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="border:none;border-spacing:0px;padding:0px;line-height: normal;"><tr valign="baseline" style="vertical-align:baseline"><td style="border:none;width:16px"><span style="font-size:11pt; font-family: 'Arial';color:#000000;">1.</span></td><td style="border:none"><span class="f_Zahlen">Legen Sie eine neue Aktion mit dem Namen </span><span class="f_Zahlen" style="font-style: italic;">Double-Opt-In: Anmeldung</span><span class="f_Zahlen"> (oder ähnlich) an. Wichtig ist vor allem, dass der Name eindeutig ist. Aktivieren Sie dabei die Option </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Double-Opt-In verwenden</span><span class="f_Zahlen">.</span></td></tr></table></div><div class="p_ImageCaption"><div style="margin:0px auto 0px auto;width:937px;padding:0px 0px 0px 0px"><img src="diese_aktion_sichert_die_neuen_empfaengerdaten.png" width="937" height="497" style="border:none" alt="Abb. 8.13: Diese Aktion sichert die neuen Empfängerdaten in der Datenbank, markiert sie aber als gesperrt." title="Abb. 8.13: Diese Aktion sichert die neuen Empfängerdaten in der Datenbank, markiert sie aber als gesperrt." /><p style="text-align:center"><span class="f_ImageCaption">Abb. 8.13: Diese Aktion sichert die neuen Empfängerdaten in der Datenbank, markiert sie aber als gesperrt.</span></p></div></div>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="border:none;border-spacing:0px;padding:0px;line-height: normal;"><tr valign="baseline" style="vertical-align:baseline"><td style="border:none;width:16px"><span style="font-size:11pt; font-family: 'Arial';color:#000000;">2.</span></td><td style="border:none"><span class="f_Zahlen">Die zweite Aktion soll das aktionsgesteuerte Mailing auslösen. Erzeugen Sie eine neue Aktion mit dem Namen </span><span class="f_Zahlen" style="font-style: italic;">Double-Opt-In: E-Mail verschicken</span><span class="f_Zahlen">. In der Auswahlliste </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Typ</span><span class="f_Zahlen"> wählen Sie den Eintrag </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Aktionsbasiertes Mailing versenden</span><span class="f_Zahlen">. Mit der Schaltfläche </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Speichern</span><span class="f_Zahlen"> übergeben Sie die Daten an den OpenEMM.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="border:none;border-spacing:0px;padding:0px;line-height: normal;"><tr valign="baseline" style="vertical-align:baseline"><td style="border:none;width:16px"><span style="font-size:11pt; font-family: 'Arial';color:#000000;">3.</span></td><td style="border:none"><span class="f_Zahlen">Nun wählen Sie unter </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Schritte</span><span class="f_Zahlen"> im Bereich </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">1</span><span class="f_Zahlen">. </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Versand</span><span class="f_Zahlen"> in der Auswahlliste </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Mailing</span><span class="f_Zahlen"> das vorhin definierte Mailing </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Double: Bestätigung</span><span class="f_Zahlen"> aus. Schließen Sie die Aktion mit der Schaltfläche </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Speichern</span><span class="f_Zahlen"> ab.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="border:none;border-spacing:0px;padding:0px;line-height: normal;"><tr valign="baseline" style="vertical-align:baseline"><td style="border:none;width:16px"><span style="font-size:11pt; font-family: 'Arial';color:#000000;">4.</span></td><td style="border:none"><span class="f_Zahlen">Die dritte Aktion dient zur Bestätigung des Double-Opt-In. Legen Sie wieder eine neue Aktion mit dem Namen</span><span class="f_Zahlen" style="font-style: italic;"> Double-Opt-In: Bestätigung</span><span class="f_Zahlen"> an. In der Auswahlliste </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Typ</span><span class="f_Zahlen"> stellen Sie auf </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Double-Opt-In Bestätigung</span><span class="f_Zahlen"> ein. Beenden Sie die Definition mit der Schaltfläche </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Speichern</span><span class="f_Zahlen">. Damit ist die Definition der Aktionen abgeschlossen.</span></td></tr></table></div>
   <!--ZOOMSTOP-->
   </div>
 </div>

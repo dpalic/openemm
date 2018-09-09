@@ -10,9 +10,9 @@ because starting with version 2011 OpenEMM uses the web container Tomcat, while
 OpenEMM 5.x and 6.x work with Resin. Therefore, to get from 5.x or 6.x to 2011
 or a later version you have to update OpenEMM manually!
 
-OpenEMM 2015 requires Java 7 and Tomcat 6 as a minimum. However, we recommend
-Java 8 and Tomcat 7. If you want to update OpenEMM, make sure that the old
-version runs on Java 7 and Tomcat 6, at least.
+OpenEMM 2015 requires Java 7 and Tomcat 6 as a minimum. However, we strongly
+recommend Java 8 and Tomcat 8. If you want to update OpenEMM, make sure that the
+old version runs on Java 7 and Tomcat 6, at least.
 
 Please read file README.txt for more details.
 
@@ -45,7 +45,7 @@ Otherwise it would be missing and the management of delayed bounces would not
 work correctly!
 
 If you want to use the webservices interface 2.0 of OpenEMM consult chapter 7.4
-of the Install and Administration Guide for configuration details.
+of the OpenEMM Install and Administration Guide for configuration details.
 
 
 PLUGINS
@@ -74,7 +74,7 @@ in the same directory as file openemm_cms.sql with the empty default CMS
 database.
 
 If you want to use the CMS demo database instead of the default CMS database
-simply replace the name of file openemm_cms-2015.sql in line 24 above with file
+simply replace the name of file openemm_cms-2015.sql in line 29 above with file
 name openemm_demo-cms-2015.sql.
 
 If you already created mailings based on CM templates you should delete these

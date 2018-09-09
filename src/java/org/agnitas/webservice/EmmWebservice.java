@@ -211,7 +211,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
 				comp.setMimeType("text/html");
 				aMailing.addComponent(comp);
         	}
-			aMailing.buildDependencies(true, con);
+			aMailing.buildDependencies(true, con, false);
 			
             mDao.saveMailing(aMailing);
             result = aMailing.getId();
@@ -294,7 +294,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
             }
             
             try {
-                aMailing.buildDependencies(false, con);
+                aMailing.buildDependencies(false, con, false);
             } catch (Exception e) {
                 logger.error(e.getMessage());
             }
@@ -822,7 +822,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
         		aMailing.addComponent(comp);
         	}
 
-            aMailing.buildDependencies(true, con);
+            aMailing.buildDependencies(true, con, false);
             mDao.saveMailing(aMailing);
 
             result = aMailing.getId();
@@ -936,7 +936,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
         aMailing.setMediatypes(mediatypes);
 
         try {
-            aMailing.buildDependencies(true, con);
+            aMailing.buildDependencies(true, con, false);
             mDao.saveMailing(aMailing);
             result = true;
         } catch (Exception e) {

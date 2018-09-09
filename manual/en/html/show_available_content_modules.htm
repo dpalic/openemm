@@ -1,6 +1,5 @@
-﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+﻿<!DOCTYPE HTML>
 <html>
-<!-- saved from url=(0029)http://www.helpandmanual.com/ -->
 <head>
    <title>Content Manager &gt; Content modules &gt; Show available content modules</title>
    <meta name="generator" content="Help & Manual">
@@ -74,19 +73,19 @@ function toggleToggles() {
 .topichead { padding: 5px 5px 20px 5px; }
 -->
 </style>   
-<script type="text/javascript" src="helpman_topicinit.js"></script>
-<!-- Redirect browser to frame page if page is not in the content frame. -->
-<script type="text/javascript">
-<!--
-if (location.search.lastIndexOf("toc=0")<=0) {
-  if (parent.frames.length==0) { parent.location.href="index.html?show_available_content_modules.htm"; }
-  else { parent.quicksync('a9.3.1'); }
-}
-//-->
-</script>
-<script type="text/javascript" src="highlight.js"></script></head>
-<body onload="highlight();">
-<div id="hmpopupDiv" style="visibility:hidden; position:absolute; z-index:1000; "></div>
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <script type="text/javascript">
+     HMSyncTOC("index.html", "show_available_content_modules.htm");
+   </script>
+   <script type="text/javascript" src="highlight.js"></script>
+   <script type="text/javascript">
+     $(document).ready(function(){highlight();});
+   </script>
+</head>
+<body>
 <!--ZOOMSTOP-->
 
 <div id="idheader">
@@ -127,15 +126,15 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 <div id="idcontent">
   <div id="innerdiv"> 
-  <p class="p_Heading3"><span class="f_Heading3">Show available content modules</span></p>
+  <h3 class="p_Heading3"><span class="f_Heading3">Show available content modules</span></h3>
 
   <!--ZOOMRESTART-->
   <p>You can display an overview of the content modules available by clicking on <span style="font-weight: bold; color: #006fb9;">Mailings</span> and <span style="font-weight: bold; color: #006fb9;">Content Manager</span> in the navigation bar and then on the &nbsp;tab <span style="font-weight: bold; color: #006fb9;">Content modules</span>. On the following page, OpenEMM shows all content modules present as a list.</p>
 <p>If you want to see only the content module of a specific category, filter your selection via the menu point <span style="font-weight: bold; color: #006fb9;">Category</span>.</p>
-<p><span style="font-weight: bold;">Please note:</span> If you have not yet assigned a category to a content module, you cannot utilize this option. You can read how you can sort content modules according to categories in chapter "<a href="cm_categories.htm">CM categories</a>".</p>
+<p><span style="font-weight: bold;">Please note:</span> If you have not yet assigned a category to a content module, you cannot utilize this option. You can read how you can sort content modules according to categories in chapter <a href="cm_categories.htm" class="topiclink">CM categories</a>.</p>
 <p>The table shows several pieces of information for each content module. The left-hand column contains the name of the content module. The middle column shows the content module in a small preview window that gives you an overview of its content.</p>
 <p>To get a larger preview of a content module, click on the corresponding image. You can make the large preview smaller at any time by clicking on the <span style="font-weight: bold; color: #006fb9;">hide preview</span> command directly to the left of and above the corresponding preview window.</p>
-<div class="p_ImageCaption"><div style="margin:0 auto;width:937px;padding:0px"><img src="the_submenu_content_module_shows.png" width="937" height="566" border="0" alt="Fig. 10.9: The submenu Content Module shows all content modules available in Content Manager in a convenient list."><p style="text-align:center"><span class="f_ImageCaption">Fig. 10.9: The submenu Content Module shows all content modules available in Content Manager in a convenient list.</span></p></div></div>
+<div class="p_ImageCaption"><div style="margin:0px auto 0px auto;width:937px;padding:0px 0px 0px 0px"><img src="the_submenu_content_module_shows.png" width="937" height="566" style="border:none" alt="Fig. 9.9: The submenu Content Module shows all content modules available in Content Manager in a convenient list." title="Fig. 9.9: The submenu Content Module shows all content modules available in Content Manager in a convenient list." /><p style="text-align:center"><span class="f_ImageCaption">Fig. 9.9: The submenu Content Module shows all content modules available in Content Manager in a convenient list.</span></p></div></div>
 <p>The option <span style="font-weight: bold; color: #006fb9;">List size</span> defines how many content module entries should appear in the list. This is preset to <span style="font-weight: bold; color: #006fb9;">20</span> entries, which you can alternatively extend to <span style="font-weight: bold; color: #006fb9;">50</span> or <span style="font-weight: bold; color: #006fb9;">100</span> entries. Clicking on the <span style="font-weight: bold; color: #006fb9;">Show</span> button accepts this setting.</p>
 
   <!--ZOOMSTOP-->

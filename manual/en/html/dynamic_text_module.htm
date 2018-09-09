@@ -1,6 +1,5 @@
-﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+﻿<!DOCTYPE HTML>
 <html>
-<!-- saved from url=(0029)http://www.helpandmanual.com/ -->
 <head>
    <title>Mailings - Sending out newsletters &gt; Templates - Re-usable text modules &gt; Using text modules &gt; Dynamic text module</title>
    <meta name="generator" content="Help & Manual">
@@ -74,19 +73,19 @@ function toggleToggles() {
 .topichead { padding: 5px 5px 20px 5px; }
 -->
 </style>   
-<script type="text/javascript" src="helpman_topicinit.js"></script>
-<!-- Redirect browser to frame page if page is not in the content frame. -->
-<script type="text/javascript">
-<!--
-if (location.search.lastIndexOf("toc=0")<=0) {
-  if (parent.frames.length==0) { parent.location.href="index.html?dynamic_text_module.htm"; }
-  else { parent.quicksync('a3.3.3.2'); }
-}
-//-->
-</script>
-<script type="text/javascript" src="highlight.js"></script></head>
-<body onload="highlight();">
-<div id="hmpopupDiv" style="visibility:hidden; position:absolute; z-index:1000; "></div>
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <script type="text/javascript">
+     HMSyncTOC("index.html", "dynamic_text_module.htm");
+   </script>
+   <script type="text/javascript" src="highlight.js"></script>
+   <script type="text/javascript">
+     $(document).ready(function(){highlight();});
+   </script>
+</head>
+<body>
 <!--ZOOMSTOP-->
 
 <div id="idheader">
@@ -94,7 +93,7 @@ if (location.search.lastIndexOf("toc=0")<=0) {
   <tr>
     <td align="left" class="topichead">
       <p class="crumbs" id="idnav">
-        <a href="mailings___sending_out_newslet.htm">Mailings - Sending out newsletters</a> &gt; <a href="templates___re_usable_text_mod.htm">Templates - Re-usable text modules</a> &gt; <a href="using_text_modules.htm">Using text modules</a>&nbsp;&gt;&nbsp;Dynamic text module    
+        <a href="mailings_-_sending_out_newslet.htm">Mailings - Sending out newsletters</a> &gt; <a href="templates_-_re-usable_text_mod.htm">Templates - Re-usable text modules</a> &gt; <a href="using_text_modules.htm">Using text modules</a>&nbsp;&gt;&nbsp;Dynamic text module    
       </p>
     </td>
     <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
@@ -127,28 +126,28 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 <div id="idcontent">
   <div id="innerdiv"> 
-  <p class="p_Heading4"><span class="f_Heading4">Dynamic text module</span></p>
+  <h4 class="p_Heading4"><span class="f_Heading4">Dynamic text module</span></h4>
 
   <!--ZOOMRESTART-->
   <p>With additional AGNITAS tags, your templates will become even more flexible. Imagine you have inserted several special offers each included in a separate text module into your template. Between special offers, a line of dashes should act as delimiter.</p>
-<p class="p_BeispieltextQuelltext"><span class="f_BeispieltextQuelltext">[agnTITLE type=1],</span><br>
-<span class="f_BeispieltextQuelltext">Welcome to this week’s special offers from your seed catalog!</span><br>
-<span class="f_BeispieltextQuelltext">[agnDYN name="SpecialOffer1"/]</span><br>
-<span class="f_BeispieltextQuelltext">--------------------------------------------------------------------------</span><br>
-<span class="f_BeispieltextQuelltext">[agnDYN name="SpecialOffer2"/]</span><br>
-<span class="f_BeispieltextQuelltext">--------------------------------------------------------------------------</span><br>
-<span class="f_BeispieltextQuelltext">[agnDYN name="SpecialOffer3"/]</span><br>
-<span class="f_BeispieltextQuelltext">Yours sincerely</span><br>
+<p class="p_BeispieltextQuelltext"><span class="f_BeispieltextQuelltext">[agnTITLE type=1/],</span><br />
+<span class="f_BeispieltextQuelltext">Welcome to this week’s special offers from your seed catalog!</span><br />
+<span class="f_BeispieltextQuelltext">[agnDYN name=&quot;SpecialOffer1&quot;/]</span><br />
+<span class="f_BeispieltextQuelltext">--------------------------------------------------------------------------</span><br />
+<span class="f_BeispieltextQuelltext">[agnDYN name=&quot;SpecialOffer2&quot;/]</span><br />
+<span class="f_BeispieltextQuelltext">--------------------------------------------------------------------------</span><br />
+<span class="f_BeispieltextQuelltext">[agnDYN name=&quot;SpecialOffer3&quot;/]</span><br />
+<span class="f_BeispieltextQuelltext">Yours sincerely</span><br />
 <span class="f_BeispieltextQuelltext">Your Seed Newsletter Service</span></p>
 <p>Now what if a newsletter only features two special offers? There will be no <span style="font-style: italic;">SpecialOffer3</span> special offer or text module. The OpenEMM will not insert anything there. This produces a redundant delimiter. A complex template with several text modules may look ugly as a result.</p>
 <p>The special notation for the <span style="font-style: italic;">[agnDYN]</span> AGNITAS tag can help:</p>
-<p class="p_BeispieltextQuelltext"><span class="f_BeispieltextQuelltext">[agnDYN name="SpecialOffer3"/]</span><br>
-<span class="f_BeispieltextQuelltext">--------------------------------------------------------------------------</span><br>
-<span class="f_BeispieltextQuelltext">[agnDVALUE name="SpecialOffer3"/]</span><br>
-<span class="f_BeispieltextQuelltext">[/agnDYN name="SpecialOffer3"/]</span></p>
-<p>The line <span style="font-style: italic;">[agnDYN name="SpecialOffer3"]</span> starts an area. Please note that the slash <span style="font-style: italic;">/</span> is missing at the end of the tag. The OpenEMM now knows that it is not supposed to insert a text module, but that something else is to follow. The second line is the delimiter for your special offer. The new tag <span style="font-style: italic;">[agnDVALUE name="SpecialOffer3"/]</span> inserts the SpecialOffer3 text module. The tag ends with<span style="font-style: italic;"> [/agnDYN name="SpecialOffer3"]</span>. Note this tag starts with a slash. This tells the system that the tag ends an area. It is very important to include the same text module in all three tags.</p>
+<p class="p_BeispieltextQuelltext"><span class="f_BeispieltextQuelltext">[agnDYN name=&quot;SpecialOffer3&quot;/]</span><br />
+<span class="f_BeispieltextQuelltext">--------------------------------------------------------------------------</span><br />
+<span class="f_BeispieltextQuelltext">[agnDVALUE name=&quot;SpecialOffer3&quot;/]</span><br />
+<span class="f_BeispieltextQuelltext">[/agnDYN name=&quot;SpecialOffer3&quot;/]</span></p>
+<p>The line <span style="font-style: italic;">[agnDYN name=&quot;SpecialOffer3&quot;]</span> starts an area. Please note that the slash <span style="font-style: italic;">/</span> is missing at the end of the tag. The OpenEMM now knows that it is not supposed to insert a text module, but that something else is to follow. The second line is the delimiter for your special offer. The new tag <span style="font-style: italic;">[agnDVALUE name=&quot;SpecialOffer3&quot;/]</span> inserts the SpecialOffer3 text module. The tag ends with<span style="font-style: italic;"> [/agnDYN name=&quot;SpecialOffer3&quot;]</span>. Note this tag starts with a slash. This tells the system that the tag ends an area. It is very important to include the same text module in all three tags.</p>
 <p>The sequence of three AGNITAS tags does the following:</p>
-<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="13"><span style="font-size: 11pt; font-family: 'Arial Unicode MS', 'Lucida Sans Unicode', 'Arial'; color: #000000;">&#8226;</span></td><td><span class="f_Punkte">If there is a </span><span class="f_Punkte" style="font-style: italic;">SpecialOffer3</span><span class="f_Punkte"> text module, the system inserts the whole text between </span><span class="f_Punkte" style="font-style: italic;">[agnDYN name="SpecialOffer3"]</span><span class="f_Punkte"> and </span><span class="f_Punkte" style="font-style: italic;">[/agnDYN name="SpecialOffer3"]</span><span class="f_Punkte"> in the e-mail. The text module is called up using the line</span><span class="f_Punkte" style="font-style: italic;"> [agnDVALUE name="SpecialOffer3"]</span><span class="f_Punkte">. Other AGNITAS tags could also be used.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="13"><span style="font-size: 11pt; font-family: 'Arial Unicode MS', 'Lucida Sans Unicode', 'Arial'; color: #000000;">&#8226;</span></td><td><span class="f_Punkte">If there is no </span><span class="f_Punkte" style="font-style: italic;">SpecialOffer3</span><span class="f_Punkte"> text module, the system deletes everything between</span><span class="f_Punkte" style="font-style: italic;"> [agnDYN name="SpecialOffer3"]</span><span class="f_Punkte"> and </span><span class="f_Punkte" style="font-style: italic;">[/agnDYN name="SpecialOffer3"]</span><span class="f_Punkte">. The finished e-mail will contain neither a blank line nor a delimiter.</span></td></tr></table></div>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="border:none;border-spacing:0px;padding:0px;line-height: normal;"><tr valign="baseline" style="vertical-align:baseline"><td style="border:none;width:13px"><span style="font-size:11pt; font-family: 'Arial Unicode MS','Lucida Sans Unicode','Arial';color:#000000;">&#8226;</span></td><td style="border:none"><span class="f_Punkte">If there is a </span><span class="f_Punkte" style="font-style: italic;">SpecialOffer3</span><span class="f_Punkte"> text module, the system inserts the whole text between </span><span class="f_Punkte" style="font-style: italic;">[agnDYN name=&quot;SpecialOffer3&quot;]</span><span class="f_Punkte"> and </span><span class="f_Punkte" style="font-style: italic;">[/agnDYN name=&quot;SpecialOffer3&quot;]</span><span class="f_Punkte"> in the e-mail. The text module is called up using the line</span><span class="f_Punkte" style="font-style: italic;"> [agnDVALUE name=&quot;SpecialOffer3&quot;]</span><span class="f_Punkte">. Other AGNITAS tags could also be used.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="border:none;border-spacing:0px;padding:0px;line-height: normal;"><tr valign="baseline" style="vertical-align:baseline"><td style="border:none;width:13px"><span style="font-size:11pt; font-family: 'Arial Unicode MS','Lucida Sans Unicode','Arial';color:#000000;">&#8226;</span></td><td style="border:none"><span class="f_Punkte">If there is no </span><span class="f_Punkte" style="font-style: italic;">SpecialOffer3</span><span class="f_Punkte"> text module, the system deletes everything between</span><span class="f_Punkte" style="font-style: italic;"> [agnDYN name=&quot;SpecialOffer3&quot;]</span><span class="f_Punkte"> and </span><span class="f_Punkte" style="font-style: italic;">[/agnDYN name=&quot;SpecialOffer3&quot;]</span><span class="f_Punkte">. The finished e-mail will contain neither a blank line nor a delimiter.</span></td></tr></table></div>
   <!--ZOOMSTOP-->
   </div>
 </div>

@@ -1,8 +1,7 @@
-﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+﻿<!DOCTYPE HTML>
 <html>
-<!-- saved from url=(0029)http://www.helpandmanual.com/ -->
 <head>
-   <title>Formulare &amp; Aktionen &gt; Formular - Selbstverwaltung für Empfänger &gt; Formulare &gt; Versand des letzten Newsletters nach der Anmeldung</title>
+   <title>Sites &amp; Actions &gt; Formular - Selbstverwaltung für Empfänger &gt; Formulare &gt; Versand des letzten Newsletters nach der Anmeldung</title>
    <meta name="generator" content="Help & Manual">
    <meta name="keywords" content="">
    <meta name="description" content="Versand des letzten Newsletters nach der Anmeldung">
@@ -74,19 +73,19 @@ function toggleToggles() {
 .topichead { padding: 5px 5px 20px 5px; }
 -->
 </style>   
-<script type="text/javascript" src="helpman_topicinit.js"></script>
-<!-- Redirect browser to frame page if page is not in the content frame. -->
-<script type="text/javascript">
-<!--
-if (location.search.lastIndexOf("toc=0")<=0) {
-  if (parent.frames.length==0) { parent.location.href="index.html?sending_the_last_newsletter_ju.htm"; }
-  else { parent.quicksync('a8.1.2.6'); }
-}
-//-->
-</script>
-<script type="text/javascript" src="highlight.js"></script></head>
-<body onload="highlight();">
-<div id="hmpopupDiv" style="visibility:hidden; position:absolute; z-index:1000; "></div>
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <script type="text/javascript">
+     HMSyncTOC("index.html", "sending_the_last_newsletter_ju.htm");
+   </script>
+   <script type="text/javascript" src="highlight.js"></script>
+   <script type="text/javascript">
+     $(document).ready(function(){highlight();});
+   </script>
+</head>
+<body>
 <!--ZOOMSTOP-->
 
 <div id="idheader">
@@ -94,7 +93,7 @@ if (location.search.lastIndexOf("toc=0")<=0) {
   <tr>
     <td align="left" class="topichead">
       <p class="crumbs" id="idnav">
-        <a href="sites__actions.htm">Formulare &amp; Aktionen</a> &gt; <a href="forms___recipient_management.htm">Formular - Selbstverwaltung für Empfänger</a> &gt; <a href="forms.htm">Formulare</a>&nbsp;&gt;&nbsp;Versand des letzten Newsletters nach der Anmeldung    
+        <a href="sites__actions.htm">Sites &amp; Actions</a> &gt; <a href="forms_-_recipient_management.htm">Formular - Selbstverwaltung für Empfänger</a> &gt; <a href="forms.htm">Formulare</a>&nbsp;&gt;&nbsp;Versand des letzten Newsletters nach der Anmeldung    
       </p>
     </td>
     <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
@@ -127,19 +126,19 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 <div id="idcontent">
   <div id="innerdiv"> 
-  <p class="p_Heading4"><span class="f_Heading4">Versand des letzten Newsletters nach der Anmeldung</span></p>
+  <h4 class="p_Heading4"><span class="f_Heading4">Versand des letzten Newsletters nach der Anmeldung</span></h4>
 
   <!--ZOOMRESTART-->
   <p>Es besteht die Möglichkeit, neuen Abonnenten unmittelbar nach der Anmeldung den letzten Newsletter zuzusenden. Der Vorteil liegt auf der Hand: Der neue Empfänger hat im Moment der Anmeldung offensichtlich ein großes Interesse an Ihrem Newsletter. Daher ist es vorteilhaft, den letzten Newsletter sofort zuzusenden, anstatt den Empfänger erst mit dem nächsten regulären Versand zu beliefern. Die Zielgruppendefinition des Newsletters (falls vorhanden) wird hierbei berücksichtigt, d.h. der Empfänger erhält den Newsletter nur dann, wenn er zur Zielgruppe gehört.</p>
 <p>Zur Einrichtung dieser Funktion ist es lediglich notwenig, Ihre bestehende Aktion zur Anmeldung zu modifizieren. Wählen Sie also in der Aktions-Übersicht Ihre Anmeldeaktion aus und erweitern Sie diese. Es macht Sinn, die Beschreibung der Aktion anzupassen, damit Sie nicht den Überblick verlieren. Klicken Sie auf <span style="font-weight: bold; color: #006fb9;">Schritt hinzufügen</span> und wählen Sie <span style="font-weight: bold; color: #006fb9;">Skript-Aktion</span> aus. Dann können Sie folgende Befehle einfügen:</p>
-<p class="p_BeispieltextQuelltext"><span class="f_BeispieltextQuelltext">#set($last=$ScriptHelper.findLastNewsletter($customerID, 1, &lt;mailinglistID&gt;))</span><br>
-<span class="f_BeispieltextQuelltext">#set ($mail=$MailingDao.getMailing($last, 1))</span><br>
-<span class="f_BeispieltextQuelltext">#if($mail) </span><br>
-<span class="f_BeispieltextQuelltext">$mail.sendEventMailing($customerID.intValue(), 0, "1", null, $ScriptHelper.getApplicationContext()) </span><br>
-<span class="f_BeispieltextQuelltext">#end </span><br>
-<span class="f_BeispieltextQuelltext">#set($scriptResult="1")</span></p>
+<p class="p_BeispieltextQuelltext"><span class="f_BeispieltextQuelltext">#set($last=$ScriptHelper.findLastNewsletter($customerID, 1, &lt;mailinglistID&gt;))</span><br />
+<span class="f_BeispieltextQuelltext">#set ($mail=$MailingDao.getMailing($last, 1))</span><br />
+<span class="f_BeispieltextQuelltext">#if($mail) </span><br />
+<span class="f_BeispieltextQuelltext">$mail.sendEventMailing($customerID.intValue(), 0, &quot;1&quot;, null, $ScriptHelper.getApplicationContext()) </span><br />
+<span class="f_BeispieltextQuelltext">#end </span><br />
+<span class="f_BeispieltextQuelltext">#set($scriptResult=&quot;1&quot;)</span></p>
 <p>Klicken Sie abschließend auf <span style="font-weight: bold; color: #006fb9;">Speichern</span>. Die Aktion ist aktiv. Sie sollten sich einmal für den Newsletter anmelden, um die neue Aktion zu testen.</p>
-<div class="p_ImageCaption"><div style="margin:0 auto;width:900px;padding:0px"><img src="der_anmeldeaktion_wird_ein_einfaches_skript.png" width="900" height="660" border="0" alt="Abb. 9.17: Der Anmeldeaktion wird ein einfaches Skript hinzugefügt."><p style="text-align:center"><span class="f_ImageCaption">Abb. 9.17: Der Anmeldeaktion wird ein einfaches Skript hinzugefügt.</span></p></div></div>
+<div class="p_ImageCaption"><div style="margin:0px auto 0px auto;width:896px;padding:0px 0px 0px 0px"><img src="der_anmeldeaktion_wird_ein_einfaches_skript.png" width="896" height="675" style="border:none" alt="Abb. 8.17: Der Anmeldeaktion wird ein einfaches Skript hinzugefügt." title="Abb. 8.17: Der Anmeldeaktion wird ein einfaches Skript hinzugefügt." /><p style="text-align:center"><span class="f_ImageCaption">Abb. 8.17: Der Anmeldeaktion wird ein einfaches Skript hinzugefügt.</span></p></div></div>
 
   <!--ZOOMSTOP-->
   </div>

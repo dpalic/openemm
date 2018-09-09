@@ -13,4 +13,4 @@
 <c:set var="agnNavigationKey" value="AutoImportView" scope="request" />
 <c:set var="agnHighlightKey" value="autoImport.autoImport" scope="request" />
 <c:set var="agnNavHrefAppend" value="&autoImportId=${autoImportForm.autoImportId}" scope="request" />
-<c:set var="agnHelpKey" value="dashboard" scope="request" />
+<c:set var="agnHelpKey" value="autoImport" scope="request" />

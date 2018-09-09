@@ -1,0 +1,165 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+   <title>Mailings - Newsletter versenden &gt; Mailings anlegen, bearbeiten und versenden &gt; Messbare Links verwenden &gt; AGNITAS-Tags in messbare Links einbauen</title>
+   <meta name="generator" content="Help & Manual">
+   <meta name="keywords" content="">
+   <meta name="description" content="AGNITAS-Tags in messbare Links einbauen">
+   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+   <!-- This line forces IE8 into IE7 mode, safer until IE8 is better known -->
+   <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7" />
+
+   <link type="text/css" href="default.css" rel="stylesheet">
+   <link type="text/css" href="custom.css" rel="stylesheet">
+   <script type="text/javascript" src="nsh.js"></script>
+
+<script type="text/javascript">   
+// Toggle Toggler 
+
+var toggleCount=false;
+var switchState;
+
+function toggleToggles() {
+
+    if (!toggleCount) {
+     toggleCount = true;
+     HMToggleExpandAll(true);
+     switchState = true;
+     }
+   
+     else if (switchState) {
+        HMToggleExpandAll(false);
+        switchState = false;
+        }
+        
+     else  {
+        HMToggleExpandAll(true);
+        switchState = true;
+        } 
+    }
+</script>
+   
+<!-- non-scrolling headers for CHM and browser-based help, local styles-->
+<style TYPE="text/css" media="screen"> 
+   body {    
+      margin:0; 
+      padding:0; 
+      overflow: auto; 
+      background: #FFFFFF; 
+   } 
+   #idheader { 
+      width:100%; 
+      height:auto; 
+      padding: 0; 
+      margin: 0; 
+} 
+
+   #callout-table, #overview-table {display:block; position:relative; top:0; left:0;}
+   #callout-icon {display:block; position:absolute; top:-11px; left:-11px;}
+   #callout-icon-flag {display:block; position:absolute; top:-11px; left:-8px;}
+   #callout-table a {text-decoration: none; color: blue;}
+   #callout-table a:visited {text-decoration: none; color: blue;}
+   #overview-table a {text-decoration: none; color: black;}
+   #overview-table a:visited {text-decoration: none; color: black;}
+   #callout-table a:hover, #overview-table a:hover {text-decoration: underline;}
+   </style>
+   
+<style TYPE="text/css" MEDIA="print">
+<!--
+/* Hide navigation links and add space between header
+     and text in the printed version. Not valid for eBooks. */
+#idnav { display:none;	 }
+.topichead { padding: 5px 5px 20px 5px; }
+-->
+</style>   
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <script type="text/javascript">
+     HMSyncTOC("index.html", "insert_agnitas-tags_into_track.htm");
+   </script>
+   <script type="text/javascript" src="highlight.js"></script>
+   <script type="text/javascript">
+     $(document).ready(function(){highlight();});
+   </script>
+</head>
+<body>
+<!--ZOOMSTOP-->
+
+<div id="idheader">
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0px;">
+  <tr>
+    <td align="left" class="topichead">
+      <p class="crumbs" id="idnav">
+        <a href="mailings_-_sending_out_newslet.htm">Mailings - Newsletter versenden</a> &gt; <a href="create__edit_and_send_mailings.htm">Mailings anlegen, bearbeiten und versenden</a> &gt; <a href="using_trackable_links.htm">Messbare Links verwenden</a>&nbsp;&gt;&nbsp;AGNITAS-Tags in messbare Links einbauen    
+      </p>
+    </td>
+    <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
+        
+        
+          <a href="create_a_link_in_the_text_vers.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
+          </a>
+        
+        
+        <a href="using_trackable_links.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
+        </a>
+        
+          <a href="create_trackable_and_non-track.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <img name=next src="btn_next_n.gif" border=0 alt="Next page">
+          </a>
+        
+        
+    </td -->
+  </tr>
+</table>
+
+<!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
+  
+
+</div>  
+
+
+
+<div id="idcontent">
+  <div id="innerdiv"> 
+  <h4 class="p_Heading4"><span class="f_Heading4">AGNITAS-Tags in messbare Links einbauen</span></h4>
+
+  <!--ZOOMRESTART-->
+  <p>Einen messbaren Link können sie zusätzlich um die beiden AGNITAS-Tags agnDATE und agnALTER erweitern und ihn damit personalisieren. Für eine URL-konforme Darstellung beider Parameter sorgt der OpenEMM dabei automatisch.</p>
+<p>Im Gegensatz zu den AGNITAS-Tags, die Sie an beliebiger Stelle in einen HTML- oder Textbaustein eines Mailings einbauen können, gibt es bei AGNITAS-Tags für messbare Links jedoch einige Unterschiede, die sich vorrangig um die Schreibweise drehen: Zum einen müssen Sie die AGNITAS-Tags agnDATE und agnALTER in den messbaren Link einfügen. Zum anderen stehen die AGNITAS-Tags bei messbaren Links nicht in eckigen Klammern, sondern beginnen und enden jeweils mit dem Kommando <span style="font-style: italic;">##</span>. Direkt dahinter steht der AGNITAS-Tag, allerdings ohne vorangestelltes <span style="font-style: italic;">agn</span>, sondern mit seiner Bezeichnung in Großbuchstaben. Folgendes Beispiel soll das verdeutlichen:</p>
+<p>Der AGNITAS-Tag agnDATE sieht in einem Text- oder HTML-Baustein eines Mailings so aus:</p>
+<p class="p_BeispieltextQuelltext"><span class="f_BeispieltextQuelltext">[agnDATE</span><span class="f_Punkte" style="font-style: italic;">/</span><span class="f_BeispieltextQuelltext">]</span></p>
+<p>An einen messbaren Link wird der AGNITAS-Tag agnDATE in dieser Schreibweise angehängt:</p>
+<p class="p_BeispieltextQuelltext"><span class="f_BeispieltextQuelltext">##DATE##</span></p>
+<p>Abgesehen von der unterschiedlichen Schreibweise ist die Funktionalität der AGNITAS-Tags sowohl bei messbaren Links als auch bei HTML- und Textbausteinen gleich. So können Sie beispielsweise für den AGNITAS-Tag agnDATE auch das voreingestellte Format über den <span style="font-style: italic;">type</span>-Parameter und sprachspezifische Darstellungen wie den Monatsnamen über den <span style="font-style: italic;">language</span>-Parameter festlegen.</p>
+<p>Die AGNITAS-Tags agnDATE und agnALTER können Sie überall in einem messbaren Link verwenden, müssen dabei aber ein bestimmtes Format einhalten, das sich in folgenden Punkten vom Format der AGNITAS-Tags für HTML- oder Textbausteine unterscheidet:</p>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="border:none;border-spacing:0px;padding:0px;line-height: normal;"><tr valign="baseline" style="vertical-align:baseline"><td style="border:none;width:13px"><span style="font-size:11pt; font-family: 'Arial Unicode MS','Lucida Sans Unicode','Arial';color:#000000;">&#8226;</span></td><td style="border:none"><span class="f_Punkte">Zwischen dem AGNITAS-Tag und den Parametern muss ein Doppelpunkt stehen.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="border:none;border-spacing:0px;padding:0px;line-height: normal;"><tr valign="baseline" style="vertical-align:baseline"><td style="border:none;width:13px"><span style="font-size:11pt; font-family: 'Arial Unicode MS','Lucida Sans Unicode','Arial';color:#000000;">&#8226;</span></td><td style="border:none"><span class="f_Punkte">Aus den Anführungszeichen werden Hochkommas.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="border:none;border-spacing:0px;padding:0px;line-height: normal;"><tr valign="baseline" style="vertical-align:baseline"><td style="border:none;width:13px"><span style="font-size:11pt; font-family: 'Arial Unicode MS','Lucida Sans Unicode','Arial';color:#000000;">&#8226;</span></td><td style="border:none"><span class="f_Punkte">Einzelne Parameter werden durch Kommas getrennt.</span></td></tr></table></div><p>Zwei Beispiele sollen die Schreibweise veranschaulichen:</p>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="border:none;border-spacing:0px;padding:0px;line-height: normal;"><tr valign="baseline" style="vertical-align:baseline"><td style="border:none;width:13px"><span style="font-size:11pt; font-family: 'Arial Unicode MS','Lucida Sans Unicode','Arial';color:#000000;">&#8226;</span></td><td style="border:none"><span class="f_Punkte" style="font-style: italic;">http://www.agnitas.de/##DATE:type='2',language='de'##</span><span class="f_Punkte"> </span><br />
+<span class="f_Punkte">wird zu</span><br />
+<span class="f_Punkte" style="font-style: italic;">http://www.agnitas.de/Mittwoch%2C+8.+Juni+2011</span><span class="f_Punkte">.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="border:none;border-spacing:0px;padding:0px;line-height: normal;"><tr valign="baseline" style="vertical-align:baseline"><td style="border:none;width:13px"><span style="font-size:11pt; font-family: 'Arial Unicode MS','Lucida Sans Unicode','Arial';color:#000000;">&#8226;</span></td><td style="border:none"><span class="f_Punkte" style="font-style: italic;">http://agnitas.de/##ALTER:column='BIRTHDAY'##Jahre.html</span><br />
+<span class="f_Punkte">wird zu</span><br />
+<span class="f_Punkte" style="font-style: italic;">http://www.agnitas.de/23Jahre.html</span></td></tr></table></div><p>Alle Details zu den beiden AGNITAS-Tags agnDATE und agnALTER finden Sie im <a href="appendix_a_agnitas-tags.htm" class="topiclink">Anhang A: AGNITAS-Tags</a>.</p>
+<p><span style="font-weight: bold;">Bitte beachten Sie: </span>Links, die AGNITAS-Tags enthalten, müssen als messbar gekennzeichnet sein.</p>
+
+  <!--ZOOMSTOP-->
+  </div>
+</div>
+
+<script type="text/javascript"> 
+<!-- 
+var lastSlashPos = document.URL.lastIndexOf("/") >
+document.URL.lastIndexOf("\\") ? document.URL.lastIndexOf("/") :
+document.URL.lastIndexOf("\\");
+if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4
+).toLowerCase() != "~hh" )
+{
+    nsrInit();
+}
+--> 
+</script> 
+</body>
+</html>

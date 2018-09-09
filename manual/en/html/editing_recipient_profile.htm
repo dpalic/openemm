@@ -1,6 +1,5 @@
-﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+﻿<!DOCTYPE HTML>
 <html>
-<!-- saved from url=(0029)http://www.helpandmanual.com/ -->
 <head>
    <title>Forms &amp; Actions &gt; Closed-loop marketing &gt; Editing recipient profile</title>
    <meta name="generator" content="Help & Manual">
@@ -74,19 +73,19 @@ function toggleToggles() {
 .topichead { padding: 5px 5px 20px 5px; }
 -->
 </style>   
-<script type="text/javascript" src="helpman_topicinit.js"></script>
-<!-- Redirect browser to frame page if page is not in the content frame. -->
-<script type="text/javascript">
-<!--
-if (location.search.lastIndexOf("toc=0")<=0) {
-  if (parent.frames.length==0) { parent.location.href="index.html?editing_recipient_profile.htm"; }
-  else { parent.quicksync('a8.3.1'); }
-}
-//-->
-</script>
-<script type="text/javascript" src="highlight.js"></script></head>
-<body onload="highlight();">
-<div id="hmpopupDiv" style="visibility:hidden; position:absolute; z-index:1000; "></div>
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <script type="text/javascript">
+     HMSyncTOC("index.html", "editing_recipient_profile.htm");
+   </script>
+   <script type="text/javascript" src="highlight.js"></script>
+   <script type="text/javascript">
+     $(document).ready(function(){highlight();});
+   </script>
+</head>
+<body>
 <!--ZOOMSTOP-->
 
 <div id="idheader">
@@ -94,18 +93,18 @@ if (location.search.lastIndexOf("toc=0")<=0) {
   <tr>
     <td align="left" class="topichead">
       <p class="crumbs" id="idnav">
-        <a href="sites__actions.htm">Forms &amp; Actions</a> &gt; <a href="closed_loop_marketing___an_exa.htm">Closed-loop marketing</a>&nbsp;&gt;&nbsp;Editing recipient profile    
+        <a href="sites__actions.htm">Forms &amp; Actions</a> &gt; <a href="closed-loop_marketing_-_an_exa.htm">Closed-loop marketing</a>&nbsp;&gt;&nbsp;Editing recipient profile    
       </p>
     </td>
     <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
         
         
-          <a href="closed_loop_marketing___an_exa.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <a href="closed-loop_marketing_-_an_exa.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
           <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
           </a>
         
         
-        <a href="closed_loop_marketing___an_exa.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <a href="closed-loop_marketing_-_an_exa.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
         <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
         </a>
         
@@ -127,12 +126,12 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 <div id="idcontent">
   <div id="innerdiv"> 
-  <p class="p_Heading3"><span class="f_Heading3">Editing recipient profile</span></p>
+  <h3 class="p_Heading3"><span class="f_Heading3">Editing recipient profile</span></h3>
 
   <!--ZOOMRESTART-->
   <p>The example measures subscribers’ interest for two different topics (travel and cars). This requires two additional fields in the user profile. Every time the subscriber clicks on a topic-related link, the field content is to be incremented by 1. After a few mailings, subscribers’ interests become clearer. A recipient who only clicked on the travel link once is not nearly as interested as a subscriber with 15 clicks registered in his or her profile. You must create two Number fields with a default value of 0. Meaningful names would be INTEREST_TRAVEL and INTEREST_CARS.</p>
-<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">1.</span></td><td><span class="f_Zahlen">Click on </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Administration</span><span class="f_Zahlen"> in the navigation bar, then on the sub-menu </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Edit profile fields</span><span class="f_Zahlen">. The contents area will display a list of all available user-defined fields. Click on the </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">New field</span><span class="f_Zahlen"> tab.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">2.</span></td><td><span class="f_Zahlen">Type </span><span class="f_Zahlen" style="font-style: italic;">Car interest</span><span class="f_Zahlen"> into the first field behind the </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Field name</span><span class="f_Zahlen">. Under </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Description</span><span class="f_Zahlen">, describe the field in detail – not much in this case. Under </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Field name in DB</span><span class="f_Zahlen"> enter </span><span class="f_Zahlen" style="font-style: italic;">Interest_Cars</span><span class="f_Zahlen">. The name spelling need not be case-sensitive. The OpenEMM converts everything into upper-case letters anyway. Select </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Numerical</span><span class="f_Zahlen"> as the field </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Type</span><span class="f_Zahlen">. The </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Length</span><span class="f_Zahlen"> field need not be changed. The system sets 22 characters as the default value. Set a </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Default value</span><span class="f_Zahlen"> of </span><span class="f_Zahlen" style="font-style: italic;">0</span><span class="f_Zahlen"> in the last box. This means all profiles will start with the same value.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">3.</span></td><td><span class="f_Zahlen">Click on </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Save</span><span class="f_Zahlen"> to conclude your entries and close the field.</span></td></tr></table></div><div class="p_ImageCaption"><div style="margin:0 auto;width:933px;padding:0px"><img src="create_a_new_number_field.png" width="933" height="484" border="0" alt="Fig. 8.35: Create a new Number field entitled Interest_Cars."><p style="text-align:center"><span class="f_ImageCaption">Fig. 8.35: Create a new Number field entitled Interest_Cars.</span></p></div></div>
-<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">4.</span></td><td><span class="f_Zahlen">The second field denoting interest in travel is created in a similar way. The </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Field name</span><span class="f_Zahlen"> is </span><span class="f_Zahlen" style="font-style: italic;">Travel interest</span><span class="f_Zahlen">, the </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Field name in DB</span><span class="f_Zahlen"> </span><span class="f_Zahlen" style="font-style: italic;">Interest_Travel</span><span class="f_Zahlen">, the </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Type</span><span class="f_Zahlen"> </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Numerical</span><span class="f_Zahlen"> and the </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Default value</span><span class="f_Zahlen"> </span><span class="f_Zahlen" style="font-style: italic;">0</span><span class="f_Zahlen">. Store your entries by clicking on </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Save</span><span class="f_Zahlen">.</span></td></tr></table></div>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="border:none;border-spacing:0px;padding:0px;line-height: normal;"><tr valign="baseline" style="vertical-align:baseline"><td style="border:none;width:16px"><span style="font-size:11pt; font-family: 'Arial';color:#000000;">1.</span></td><td style="border:none"><span class="f_Zahlen">Click on </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Administration</span><span class="f_Zahlen"> in the navigation bar, then on the sub-menu </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Edit profile fields</span><span class="f_Zahlen">. The contents area will display a list of all available user-defined fields. Click on the </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">New field</span><span class="f_Zahlen"> tab.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="border:none;border-spacing:0px;padding:0px;line-height: normal;"><tr valign="baseline" style="vertical-align:baseline"><td style="border:none;width:16px"><span style="font-size:11pt; font-family: 'Arial';color:#000000;">2.</span></td><td style="border:none"><span class="f_Zahlen">Type </span><span class="f_Zahlen" style="font-style: italic;">Car interest</span><span class="f_Zahlen"> into the first field behind the </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Field name</span><span class="f_Zahlen">. Under </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Description</span><span class="f_Zahlen">, describe the field in detail – not much in this case. Under </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Field name in DB</span><span class="f_Zahlen"> enter </span><span class="f_Zahlen" style="font-style: italic;">Interest_Cars</span><span class="f_Zahlen">. The name spelling need not be case-sensitive. The OpenEMM converts everything into upper-case letters anyway. Select </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Numerical</span><span class="f_Zahlen"> as the field </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Type</span><span class="f_Zahlen">. The </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Length</span><span class="f_Zahlen"> field need not be changed. The system sets 22 characters as the default value. Set a </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Default value</span><span class="f_Zahlen"> of </span><span class="f_Zahlen" style="font-style: italic;">0</span><span class="f_Zahlen"> in the last box. This means all profiles will start with the same value.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="border:none;border-spacing:0px;padding:0px;line-height: normal;"><tr valign="baseline" style="vertical-align:baseline"><td style="border:none;width:16px"><span style="font-size:11pt; font-family: 'Arial';color:#000000;">3.</span></td><td style="border:none"><span class="f_Zahlen">Click on </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Save</span><span class="f_Zahlen"> to conclude your entries and close the field.</span></td></tr></table></div><div class="p_ImageCaption"><div style="margin:0px auto 0px auto;width:936px;padding:0px 0px 0px 0px"><img src="create_a_new_number_field.png" width="936" height="363" style="border:none" alt="Fig. 8.35: Create a new Number field entitled Interest_Cars." title="Fig. 8.35: Create a new Number field entitled Interest_Cars." /><p style="text-align:center"><span class="f_ImageCaption">Fig. 8.35: Create a new Number field entitled Interest_Cars.</span></p></div></div>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="border:none;border-spacing:0px;padding:0px;line-height: normal;"><tr valign="baseline" style="vertical-align:baseline"><td style="border:none;width:16px"><span style="font-size:11pt; font-family: 'Arial';color:#000000;">4.</span></td><td style="border:none"><span class="f_Zahlen">The second field denoting interest in travel is created in a similar way. The </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Field name</span><span class="f_Zahlen"> is </span><span class="f_Zahlen" style="font-style: italic;">Travel interest</span><span class="f_Zahlen">, the </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Field name in DB</span><span class="f_Zahlen"> </span><span class="f_Zahlen" style="font-style: italic;">Interest_Travel</span><span class="f_Zahlen">, the </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Type</span><span class="f_Zahlen"> </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Numerical</span><span class="f_Zahlen"> and the </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Default value</span><span class="f_Zahlen"> </span><span class="f_Zahlen" style="font-style: italic;">0</span><span class="f_Zahlen">. Store your entries by clicking on </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Save</span><span class="f_Zahlen">.</span></td></tr></table></div>
   <!--ZOOMSTOP-->
   </div>
 </div>

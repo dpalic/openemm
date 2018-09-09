@@ -1,6 +1,5 @@
-﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+﻿<!DOCTYPE HTML>
 <html>
-<!-- saved from url=(0029)http://www.helpandmanual.com/ -->
 <head>
    <title>Handling - Navigate through OpenEMM &gt; Online Help</title>
    <meta name="generator" content="Help & Manual">
@@ -74,19 +73,19 @@ function toggleToggles() {
 .topichead { padding: 5px 5px 20px 5px; }
 -->
 </style>   
-<script type="text/javascript" src="helpman_topicinit.js"></script>
-<!-- Redirect browser to frame page if page is not in the content frame. -->
-<script type="text/javascript">
-<!--
-if (location.search.lastIndexOf("toc=0")<=0) {
-  if (parent.frames.length==0) { parent.location.href="index.html?online_help.htm"; }
-  else { parent.quicksync('a2.4'); }
-}
-//-->
-</script>
-<script type="text/javascript" src="highlight.js"></script></head>
-<body onload="highlight();">
-<div id="hmpopupDiv" style="visibility:hidden; position:absolute; z-index:1000; "></div>
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <script type="text/javascript">
+     HMSyncTOC("index.html", "online_help.htm");
+   </script>
+   <script type="text/javascript" src="highlight.js"></script>
+   <script type="text/javascript">
+     $(document).ready(function(){highlight();});
+   </script>
+</head>
+<body>
 <!--ZOOMSTOP-->
 
 <div id="idheader">
@@ -109,7 +108,7 @@ if (location.search.lastIndexOf("toc=0")<=0) {
         <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
         </a>
         
-          <a href="mailings___sending_out_newslet.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <a href="mailings_-_sending_out_newslet.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
           <img name=next src="btn_next_n.gif" border=0 alt="Next page">
           </a>
         
@@ -127,13 +126,13 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 <div id="idcontent">
   <div id="innerdiv"> 
-  <p class="p_Heading2"><span class="f_Heading2">Online Help</span></p>
+  <h2 class="p_Heading2"><span class="f_Heading2">Online Help</span></h2>
 
   <!--ZOOMRESTART-->
   <p>Every entry dialog used in OpenEMM provides you with online help which is called up using the help symbol – a red-framed question mark placed at the top-right of the website. The help index opens in a new window, allowing you to continue working in OpenEMM.</p>
-<div class="p_ImageCaption"><div style="margin:0 auto;width:972px;padding:0px"><img src="the_question_mark_symbol_calls.png" width="972" height="609" border="0" alt="Fig. 2.6: The question mark symbol calls up the online help index."><p style="text-align:center"><span class="f_ImageCaption">Fig. 2.6: The question mark symbol calls up the online help index.</span></p></div></div>
+<div class="p_ImageCaption"><div style="margin:0px auto 0px auto;width:1026px;padding:0px 0px 0px 0px"><img src="the_question_mark_symbol_calls.png" width="1026" height="486" style="border:none" alt="Fig. 2.6: The question mark symbol calls up the online help index." title="Fig. 2.6: The question mark symbol calls up the online help index." /><p style="text-align:center"><span class="f_ImageCaption">Fig. 2.6: The question mark symbol calls up the online help index.</span></p></div></div>
 <p>Online Help lets you find the desired answers very quickly. OpenEMM automatically recognizes the menu from which you have called the Online Help and goes directly to the associated chapter.</p>
-<p>You can optionally download the Online Manual in its entirety in PDF format and use it as an "offline reference work". To do so, click on the entry <span style="font-weight: bold; color: #006fb9;">Manual as PDF</span> in the Online Help navigation bar.</p>
+<p>You can optionally download the Online Manual in its entirety in PDF format and use it as an &quot;offline reference work&quot;. To do so, click on the entry <span style="font-weight: bold; color: #006fb9;">EMM Manual</span> in the Online Help navigation bar.</p>
 <p><span style="font-weight: bold;">Please note:</span> The Help symbol in the navigation at the top of the web page opens the Online Help start page, while the Question Mark symbol in the upper right corner calls the associated chapter.</p>
 <p>&nbsp;</p>
 

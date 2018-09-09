@@ -1,0 +1,153 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+   <title>Verwaltung - Das System konfigurieren &gt; Benutzer &gt; Benutzer verwalten</title>
+   <meta name="generator" content="Help & Manual">
+   <meta name="keywords" content="">
+   <meta name="description" content="Benutzer verwalten">
+   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+   <!-- This line forces IE8 into IE7 mode, safer until IE8 is better known -->
+   <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7" />
+
+   <link type="text/css" href="default.css" rel="stylesheet">
+   <link type="text/css" href="custom.css" rel="stylesheet">
+   <script type="text/javascript" src="nsh.js"></script>
+
+<script type="text/javascript">   
+// Toggle Toggler 
+
+var toggleCount=false;
+var switchState;
+
+function toggleToggles() {
+
+    if (!toggleCount) {
+     toggleCount = true;
+     HMToggleExpandAll(true);
+     switchState = true;
+     }
+   
+     else if (switchState) {
+        HMToggleExpandAll(false);
+        switchState = false;
+        }
+        
+     else  {
+        HMToggleExpandAll(true);
+        switchState = true;
+        } 
+    }
+</script>
+   
+<!-- non-scrolling headers for CHM and browser-based help, local styles-->
+<style TYPE="text/css" media="screen"> 
+   body {    
+      margin:0; 
+      padding:0; 
+      overflow: auto; 
+      background: #FFFFFF; 
+   } 
+   #idheader { 
+      width:100%; 
+      height:auto; 
+      padding: 0; 
+      margin: 0; 
+} 
+
+   #callout-table, #overview-table {display:block; position:relative; top:0; left:0;}
+   #callout-icon {display:block; position:absolute; top:-11px; left:-11px;}
+   #callout-icon-flag {display:block; position:absolute; top:-11px; left:-8px;}
+   #callout-table a {text-decoration: none; color: blue;}
+   #callout-table a:visited {text-decoration: none; color: blue;}
+   #overview-table a {text-decoration: none; color: black;}
+   #overview-table a:visited {text-decoration: none; color: black;}
+   #callout-table a:hover, #overview-table a:hover {text-decoration: underline;}
+   </style>
+   
+<style TYPE="text/css" MEDIA="print">
+<!--
+/* Hide navigation links and add space between header
+     and text in the printed version. Not valid for eBooks. */
+#idnav { display:none;	 }
+.topichead { padding: 5px 5px 20px 5px; }
+-->
+</style>   
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <script type="text/javascript">
+     HMSyncTOC("index.html", "managing_user.htm");
+   </script>
+   <script type="text/javascript" src="highlight.js"></script>
+   <script type="text/javascript">
+     $(document).ready(function(){highlight();});
+   </script>
+</head>
+<body>
+<!--ZOOMSTOP-->
+
+<div id="idheader">
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0px;">
+  <tr>
+    <td align="left" class="topichead">
+      <p class="crumbs" id="idnav">
+        <a href="settings_-_configuring_the_sys.htm">Verwaltung - Das System konfigurieren</a> &gt; <a href="users.htm">Benutzer</a>&nbsp;&gt;&nbsp;Benutzer verwalten    
+      </p>
+    </td>
+    <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
+        
+        
+          <a href="creating_a_new_user_and_changi.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
+          </a>
+        
+        
+        <a href="users.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
+        </a>
+        
+          <a href="assigning_user_rights2.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <img name=next src="btn_next_n.gif" border=0 alt="Next page">
+          </a>
+        
+        
+    </td -->
+  </tr>
+</table>
+
+<!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
+  
+
+</div>  
+
+
+
+<div id="idcontent">
+  <div id="innerdiv"> 
+  <h3 class="p_Heading3"><span class="f_Heading3">Benutzer verwalten</span></h3>
+
+  <!--ZOOMRESTART-->
+  <p>Um die bestehenden Benutzer zu verwalten, klicken Sie im Hauptmenü unter <span style="font-weight: bold; color: #006fb9;">Verwaltung</span> auf <span style="font-weight: bold; color: #006fb9;">Benutzer</span>. Der OpenEMM zeigt Ihnen nun eine Liste sämtlicher angelegter Nutzer an.</p>
+<div class="p_ImageCaption"><div style="margin:0px auto 0px auto;width:932px;padding:0px 0px 0px 0px"><img src="alle_benutzer_aller_mandanten_sind.png" width="932" height="246" style="border:none" alt="Abb. 10.8: Alle Benutzer ind in einer Übersicht zusammengefasst." title="Abb. 10.8: Alle Benutzer ind in einer Übersicht zusammengefasst." /><p style="text-align:center"><span class="f_ImageCaption">Abb. 10.8: Alle Benutzer ind in einer Übersicht zusammengefasst.</span></p></div></div>
+<p>Um die Einstellungen für einen angelegten Benutzer zu bearbeiten, klicken Sie entweder auf dessen Benutzer-Namen oder auf das <span style="font-weight: bold; color: #006fb9;">Bearbeiten</span>-Symbol am rechten Ende der entsprechenden Zeile. Ihre Änderungen an den Benutzereinstellungen übernehmen Sie in der Eingabemaske mit <span style="font-weight: bold; color: #006fb9;">Speichern</span>. Wollen Sie einen Benutzer löschen, klicken Sie entweder in der Eingabemaske auf <span style="font-weight: bold; color: #006fb9;">Löschen</span> oder in der Übersicht auf das <span style="font-weight: bold; color: #006fb9;">Papierkorb</span>-Symbol.</p>
+
+  <!--ZOOMSTOP-->
+  </div>
+</div>
+
+<script type="text/javascript"> 
+<!-- 
+var lastSlashPos = document.URL.lastIndexOf("/") >
+document.URL.lastIndexOf("\\") ? document.URL.lastIndexOf("/") :
+document.URL.lastIndexOf("\\");
+if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4
+).toLowerCase() != "~hh" )
+{
+    nsrInit();
+}
+--> 
+</script> 
+</body>
+</html>

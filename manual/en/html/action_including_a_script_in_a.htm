@@ -1,6 +1,5 @@
-﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+﻿<!DOCTYPE HTML>
 <html>
-<!-- saved from url=(0029)http://www.helpandmanual.com/ -->
 <head>
    <title>Forms &amp; Actions &gt; Maintain recipient's profile with actions &gt; Defining actions &gt; Action: Including a script in an action</title>
    <meta name="generator" content="Help & Manual">
@@ -74,19 +73,19 @@ function toggleToggles() {
 .topichead { padding: 5px 5px 20px 5px; }
 -->
 </style>   
-<script type="text/javascript" src="helpman_topicinit.js"></script>
-<!-- Redirect browser to frame page if page is not in the content frame. -->
-<script type="text/javascript">
-<!--
-if (location.search.lastIndexOf("toc=0")<=0) {
-  if (parent.frames.length==0) { parent.location.href="index.html?action_including_a_script_in_a.htm"; }
-  else { parent.quicksync('a8.2.3.4'); }
-}
-//-->
-</script>
-<script type="text/javascript" src="highlight.js"></script></head>
-<body onload="highlight();">
-<div id="hmpopupDiv" style="visibility:hidden; position:absolute; z-index:1000; "></div>
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <script type="text/javascript">
+     HMSyncTOC("index.html", "action_including_a_script_in_a.htm");
+   </script>
+   <script type="text/javascript" src="highlight.js"></script>
+   <script type="text/javascript">
+     $(document).ready(function(){highlight();});
+   </script>
+</head>
+<body>
 <!--ZOOMSTOP-->
 
 <div id="idheader">
@@ -100,7 +99,7 @@ if (location.search.lastIndexOf("toc=0")<=0) {
     <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
         
         
-          <a href="action_triggering_an_action_ba.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <a href="action_triggering_an_action-ba.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
           <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
           </a>
         
@@ -127,15 +126,15 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 <div id="idcontent">
   <div id="innerdiv"> 
-  <p class="p_Heading4"><span class="f_Heading4">Action: Including a script in an action</span></p>
+  <h4 class="p_Heading4"><span class="f_Heading4">Action: Including a script in an action</span></h4>
 
   <!--ZOOMRESTART-->
   <p>The OpenEMM allows you to execute your own made scripts. You can write your own script and include it in an OpenEMM action.</p>
 <p>You just have to create a <span style="font-weight: bold; color: #006fb9;">New action</span>. After you filled in the first part of the page, choose <span style="font-weight: bold; color: #006fb9;">Script-Action</span> in the <span style="font-weight: bold; color: #006fb9;">Type</span> dropdown and click on <span style="font-weight: bold; color: #006fb9;">Add</span>. Now type in your code and click on <span style="font-weight: bold; color: #006fb9;">Save</span>.</p>
 <p>Now you can insert your script in the field. Conclude with <span style="font-weight: bold; color: #006fb9;">Save</span>.</p>
 <p>There is also the possibility to add a script to an existing action. Choose an action from the action overview. In the section <span style="font-weight: bold; color: #006fb9;">Add step</span>, choose <span style="font-weight: bold; color: #006fb9;">Script-Action</span> and click on <span style="font-weight: bold; color: #006fb9;">Add</span>. Now type in your code and click on <span style="font-weight: bold; color: #006fb9;">Save</span>. </p>
-<p>An example for adding a script action is "Sending the last newsletter just after subscription" in the chapter "<a href="sending_the_last_newsletter_ju.htm">Sending the last newsletter just after subscription</a>".</p>
-<p>Further information can be found in the "Documentation for OpenEMM ScriptActions" on http://www.openemm.org.</p>
+<p>An example for adding a script action is &quot;Sending the last newsletter just after subscription&quot; in the chapter <a href="sending_the_last_newsletter_ju.htm" class="topiclink">Sending the last newsletter just after subscription</a>.</p>
+<p>Further information can be found in the &quot;Documentation for OpenEMM ScriptActions&quot; on http://www.openemm.org.</p>
 
   <!--ZOOMSTOP-->
   </div>

@@ -1,3 +1,33 @@
+OpenEMM 2015 R2 (Rev. 22671)
+2015-07-24
+
+New features in release 2015 R2
+-------------------------------
+
+Recipients:
+- auto import and auto export support FTP connections (active and passive mode)
+
+Other:
+- online help updated to level of OpenEMM 2015
+- OpenEMM can be compiled with Tomcat 8
+
+
+Bugfixes in release 2015 R2
+---------------------------
+
+Mailings:
+- content blocks can be deleted again
+- unused images of a mailing will not be removed when mailing is saved but only if mailing is copied
+- display of message with real reason for error in preview is no longer suppressed
+
+Backend:
+- Property system.alert.mail in file emm.properties preset with openemm@localhost
+
+Other:
+- added DB connection pool parameter for Tomcat 8
+- fixed broken links for online help
+
+
 OpenEMM 2015 (Rev.22609)
 2015-02-20
 

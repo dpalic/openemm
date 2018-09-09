@@ -305,7 +305,6 @@ main (int argc, char **argv) /*{{{*/
 	if (! fqdn)
 		fqdn = get_local_fqdn ();
 	st = true;
-	srandom (time (NULL));
 	for (n = optind; st && (n < argc); ++n) {
 		blockmail_t	*blockmail;
 		xmlDocPtr	doc;

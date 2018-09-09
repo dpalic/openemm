@@ -1,6 +1,5 @@
-﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+﻿<!DOCTYPE HTML>
 <html>
-<!-- saved from url=(0029)http://www.helpandmanual.com/ -->
 <head>
    <title>Mailings - Newsletter versenden &gt; Mailings anlegen, bearbeiten und versenden &gt; Neues Mailing anlegen &gt; Neues Mailing speichern</title>
    <meta name="generator" content="Help & Manual">
@@ -74,19 +73,19 @@ function toggleToggles() {
 .topichead { padding: 5px 5px 20px 5px; }
 -->
 </style>   
-<script type="text/javascript" src="helpman_topicinit.js"></script>
-<!-- Redirect browser to frame page if page is not in the content frame. -->
-<script type="text/javascript">
-<!--
-if (location.search.lastIndexOf("toc=0")<=0) {
-  if (parent.frames.length==0) { parent.location.href="index.html?saving_a_new_mailing.htm"; }
-  else { parent.quicksync('a3.2.1.6'); }
-}
-//-->
-</script>
-<script type="text/javascript" src="highlight.js"></script></head>
-<body onload="highlight();">
-<div id="hmpopupDiv" style="visibility:hidden; position:absolute; z-index:1000; "></div>
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <script type="text/javascript">
+     HMSyncTOC("index.html", "saving_a_new_mailing.htm");
+   </script>
+   <script type="text/javascript" src="highlight.js"></script>
+   <script type="text/javascript">
+     $(document).ready(function(){highlight();});
+   </script>
+</head>
+<body>
 <!--ZOOMSTOP-->
 
 <div id="idheader">
@@ -94,7 +93,7 @@ if (location.search.lastIndexOf("toc=0")<=0) {
   <tr>
     <td align="left" class="topichead">
       <p class="crumbs" id="idnav">
-        <a href="mailings___sending_out_newslet.htm">Mailings - Newsletter versenden</a> &gt; <a href="create__edit_and_send_mailings.htm">Mailings anlegen, bearbeiten und versenden</a> &gt; <a href="creating_a_new_mailing.htm">Neues Mailing anlegen</a>&nbsp;&gt;&nbsp;Neues Mailing speichern    
+        <a href="mailings_-_sending_out_newslet.htm">Mailings - Newsletter versenden</a> &gt; <a href="create__edit_and_send_mailings.htm">Mailings anlegen, bearbeiten und versenden</a> &gt; <a href="creating_a_new_mailing.htm">Neues Mailing anlegen</a>&nbsp;&gt;&nbsp;Neues Mailing speichern    
       </p>
     </td>
     <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
@@ -127,117 +126,115 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 <div id="idcontent">
   <div id="innerdiv"> 
-  <p class="p_Heading4"><span class="f_Heading4">Neues Mailing speichern</span></p>
+  <h4 class="p_Heading4"><span class="f_Heading4">Neues Mailing speichern</span></h4>
 
   <!--ZOOMRESTART-->
-  <div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">1.</span></td><td><span class="f_Zahlen">Klicken Sie abschließend auf die Schaltfläche </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Speichern</span><span class="f_Zahlen">.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">2.</span></td><td><span class="f_Zahlen">Nach dem Speichern erscheinen neue Registerkarten in der oberen Bildschirmhälfte: Hier haben Sie Zugriff auf die weiteren Einstellungen und können nun Inhalte eingeben oder auch Ihr Mailing vor dem Versand testen.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">3.</span></td><td><span class="f_Zahlen">Sollten Sie ein Mailing irrtümlich angelegt oder falsch konfiguriert haben, verwerfen Sie es über die Schaltfläche </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Löschen</span><span class="f_Zahlen">.</span></td></tr></table></div><div class="p_ImageCaption"><div style="margin:0 auto;width:939px;padding:0px"><img src="nach_dem_speichern_erscheinen_neue_registerkarten..png" width="939" height="695" border="0" alt="Abb. 3.17: Nach dem Speichern erscheinen neue Registerkarten."><p style="text-align:center"><span class="f_ImageCaption">Abb. 3.17: Nach dem Speichern erscheinen neue Registerkarten.</span></p></div></div>
+  <div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="border:none;border-spacing:0px;padding:0px;line-height: normal;"><tr valign="baseline" style="vertical-align:baseline"><td style="border:none;width:16px"><span style="font-size:11pt; font-family: 'Arial';color:#000000;">1.</span></td><td style="border:none"><span class="f_Zahlen">Klicken Sie abschließend auf die Schaltfläche </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Speichern</span><span class="f_Zahlen">.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="border:none;border-spacing:0px;padding:0px;line-height: normal;"><tr valign="baseline" style="vertical-align:baseline"><td style="border:none;width:16px"><span style="font-size:11pt; font-family: 'Arial';color:#000000;">2.</span></td><td style="border:none"><span class="f_Zahlen">Nach dem Speichern erscheinen neue Registerkarten in der oberen Bildschirmhälfte: Hier haben Sie Zugriff auf die weiteren Einstellungen und können nun Inhalte eingeben oder auch Ihr Mailing vor dem Versand testen.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="border:none;border-spacing:0px;padding:0px;line-height: normal;"><tr valign="baseline" style="vertical-align:baseline"><td style="border:none;width:16px"><span style="font-size:11pt; font-family: 'Arial';color:#000000;">3.</span></td><td style="border:none"><span class="f_Zahlen">Sollten Sie ein Mailing irrtümlich angelegt oder falsch konfiguriert haben, verwerfen Sie es über die Schaltfläche </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Löschen</span><span class="f_Zahlen">.</span></td></tr></table></div><div class="p_ImageCaption"><div style="margin:0px auto 0px auto;width:933px;padding:0px 0px 0px 0px"><img src="nach_dem_speichern_erscheinen_neue_registerkarten..png" width="933" height="696" style="border:none" alt="Abb. 3.17: Nach dem Speichern erscheinen neue Registerkarten." title="Abb. 3.17: Nach dem Speichern erscheinen neue Registerkarten." /><p style="text-align:center"><span class="f_ImageCaption">Abb. 3.17: Nach dem Speichern erscheinen neue Registerkarten.</span></p></div></div>
 <p>Die folgende Tabelle listet noch einmal alle Eingabefelder und Auswahllisten auf, die Sie für ein neues Mailing ausfüllen können.</p>
-<p>&nbsp;</p>
-<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 19px 0px;"><table width="100%" cellspacing="0" cellpadding="3" border="0" style="border: none; border-spacing:0px; border-collapse: collapse;">
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 19px 0px;"><table style="width:100%; border:none; border-spacing:0px; border-collapse:collapse;">
 <tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="20%" style="width:20%; border: solid 1px #000000;"><p class="p_TabelleUeberschrift"><span class="f_TabelleUeberschrift">Feld</span></p>
+<td style="vertical-align:top; width:20%; padding:3px; border:solid 1px #000000;"><p class="p_TabelleUeberschrift"><span class="f_TabelleUeberschrift">Feld</span></p>
 </td>
-<td valign="top" width="722" style="width:722px; border: solid 1px #000000;"><p class="p_TabelleUeberschrift"><span class="f_TabelleUeberschrift">Bedeutung</span></p>
+<td style="vertical-align:top; width:722px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleUeberschrift"><span class="f_TabelleUeberschrift">Bedeutung</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="20%" style="width:20%; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Name</span></p>
+<td style="vertical-align:top; width:20%; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Name</span></p>
 </td>
-<td valign="top" width="722" style="width:722px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Bestimmt den Namen des Mailings. Dieser Name erscheint später im Inhaltsbereich und unterstützt die Auswahl.</span></p>
-</td>
-</tr>
-<tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="20%" style="width:20%; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Beschreibung</span></p>
-</td>
-<td valign="top" width="722" style="width:722px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Gibt Ihnen die Möglichkeit, Kommentare zum jeweiligen Mailing einzutragen.</span></p>
+<td style="vertical-align:top; width:722px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Bestimmt den Namen des Mailings. Dieser Name erscheint später im Inhaltsbereich und unterstützt die Auswahl.</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="20%" style="width:20%; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Archiv</span></p>
+<td style="vertical-align:top; width:20%; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Beschreibung</span></p>
 </td>
-<td valign="top" width="722" style="width:722px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Weisen Sie das neue Mailing zur leichteren Verwaltung einem bestehenden Archiv zu. Die Angabe ist nicht unbedingt erforderlich.</span></p>
-</td>
-</tr>
-<tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="20%" style="width:20%; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Mailing-Liste</span></p>
-</td>
-<td valign="top" width="722" style="width:722px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Hier können Sie die Mailing-Liste für das aktuelle Mailing auswählen.</span></p>
+<td style="vertical-align:top; width:722px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Gibt Ihnen die Möglichkeit, Kommentare zum jeweiligen Mailing einzutragen.</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="20%" style="width:20%; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Zielgruppe</span></p>
+<td style="vertical-align:top; width:20%; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Archiv</span></p>
 </td>
-<td valign="top" width="722" style="width:722px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">In diesem Feld können Sie vordefinierte Zielgruppen einstellen.</span></p>
-</td>
-</tr>
-<tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="20%" style="width:20%; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Mailing-Typ</span></p>
-</td>
-<td valign="top" width="722" style="width:722px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Hier haben Sie die Auswahl zwischen normalen Mailings und aktions- und datumsgesteuerten Mailings.</span></p>
+<td style="vertical-align:top; width:722px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Weisen Sie das neue Mailing zur leichteren Verwaltung einem bestehenden Archiv zu. Die Angabe ist nicht unbedingt erforderlich.</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="20%" style="width:20%; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Schablone</span></p>
+<td style="vertical-align:top; width:20%; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Mailing-Liste</span></p>
 </td>
-<td valign="top" width="722" style="width:722px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Hier wählen Sie eine Ihrer Schablonen aus.</span></p>
-</td>
-</tr>
-<tr style="text-align:left;vertical-align:top;">
-<td colspan="2" valign="top" style="border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Optionale Parameter:</span></p>
+<td style="vertical-align:top; width:722px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Hier können Sie die Mailing-Liste für das aktuelle Mailing auswählen.</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="20%" style="width:20%; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Absender-E-Mail:</span></p>
+<td style="vertical-align:top; width:20%; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Zielgruppe</span></p>
 </td>
-<td valign="top" width="722" style="width:722px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Über dieses Feld bestimmen Sie, welche E-Mail-Adresse als Absender-Adresse im Mailing erscheint. Anzuraten ist eine nachvollziehbare E-Mail-Adresse wie z.B. </span><span class="f_TabelleInhalt" style="font-style: italic;">newsdienst@ihreadresse.de</span><span class="f_TabelleInhalt">.</span></p>
+<td style="vertical-align:top; width:722px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">In diesem Feld können Sie vordefinierte Zielgruppen einstellen.</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="20%" style="width:20%; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Absender-Name / Antwort-Name</span></p>
+<td style="vertical-align:top; width:20%; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Mailing-Typ</span></p>
 </td>
-<td valign="top" width="722" style="width:722px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Sie können die E-Mail-Adresse durch einen Namen ersetzen, den die Empfänger dann in ihrem E-Mail-Programm sehen. Im Hintergrund bleibt aber die vollständige Adresse erhalten, so dass Rückantworten auch weiterhin funktionieren. Der Empfänger sieht nur den vollen Namen im Absenderfeld seines E-Mail-Programms.</span><br>
+<td style="vertical-align:top; width:722px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Hier haben Sie die Auswahl zwischen normalen Mailings und aktions- und datumsgesteuerten Mailings.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:top; width:20%; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Schablone</span></p>
+</td>
+<td style="vertical-align:top; width:722px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Hier wählen Sie eine Ihrer Schablonen aus.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td colspan="2" style="vertical-align:top; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Optionale Parameter:</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:top; width:20%; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Absender-E-Mail:</span></p>
+</td>
+<td style="vertical-align:top; width:722px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Über dieses Feld bestimmen Sie, welche E-Mail-Adresse als Absender-Adresse im Mailing erscheint. Anzuraten ist eine nachvollziehbare E-Mail-Adresse wie z.B. </span><span class="f_TabelleInhalt" style="font-style: italic;">newsdienst@ihreadresse.de</span><span class="f_TabelleInhalt">.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:top; width:20%; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Absender-Name / Antwort-Name</span></p>
+</td>
+<td style="vertical-align:top; width:722px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Sie können die E-Mail-Adresse durch einen Namen ersetzen, den die Empfänger dann in ihrem E-Mail-Programm sehen. Im Hintergrund bleibt aber die vollständige Adresse erhalten, so dass Rückantworten auch weiterhin funktionieren. Der Empfänger sieht nur den vollen Namen im Absenderfeld seines E-Mail-Programms.</span><br />
 <span class="f_TabelleInhalt">Sie können für den Absender-Namen und den Antwort-Namen unterschiedliche Realnames angeben. Die E-Mail-Adresse wird davon nicht beeinflusst.</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="20%" style="width:20%; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Antwort-E-Mail:</span></p>
+<td style="vertical-align:top; width:20%; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Antwort-E-Mail:</span></p>
 </td>
-<td valign="top" width="722" style="width:722px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Über dieses Feld bestimmen Sie, an welche E-Mail-Adresse standardmäßig Antworten gehen sollen.</span></p>
-</td>
-</tr>
-<tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="20%" style="width:20%; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Betreff</span></p>
-</td>
-<td valign="top" width="722" style="width:722px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Tragen Sie einen Text ein, der später nach dem Versand als Betreffzeile Ihres Mailings bei den Empfängern erscheinen soll.</span></p>
+<td style="vertical-align:top; width:722px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Über dieses Feld bestimmen Sie, an welche E-Mail-Adresse standardmäßig Antworten gehen sollen.</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="20%" style="width:20%; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Format</span></p>
+<td style="vertical-align:top; width:20%; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Betreff</span></p>
 </td>
-<td valign="top" width="722" style="width:722px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Hier können Sie den Versand an Empfänger eines bestimmten Mail-Formats auswählen - entweder nur </span><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Text</span><span class="f_TabelleInhalt">, </span><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Text und HTML</span><span class="f_TabelleInhalt" style="font-family: 'Tahoma';"> </span><span class="f_TabelleInhalt">sowie </span><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Text, HTML und Offline-HTML</span><span class="f_TabelleInhalt">.</span></p>
-</td>
-</tr>
-<tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="20%" style="width:20%; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Öffnungsrate messen</span></p>
-</td>
-<td valign="top" width="722" style="width:722px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Zur Messung der Öffnungsrate von HTML-Mailings können Sie hier automatisch ein Messpixel in Ihr E-Mailing einfügen und festlegen an welcher Stelle das Messpixel integriert werden soll.</span></p>
+<td style="vertical-align:top; width:722px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Tragen Sie einen Text ein, der später nach dem Versand als Betreffzeile Ihres Mailings bei den Empfängern erscheinen soll.</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="20%" style="width:20%; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Zeichensatz</span></p>
+<td style="vertical-align:top; width:20%; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Format</span></p>
 </td>
-<td valign="top" width="722" style="width:722px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Sie können zwischen verschiedenen Zeichensätzen auswählen.</span></p>
+<td style="vertical-align:top; width:722px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Hier können Sie den Versand an Empfänger eines bestimmten Mail-Formats auswählen - entweder nur </span><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Text</span><span class="f_TabelleInhalt">, </span><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Text und HTML</span><span class="f_TabelleInhalt" style="font-family: Tahoma;"> </span><span class="f_TabelleInhalt">sowie </span><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Text, HTML und Offline-HTML</span><span class="f_TabelleInhalt">.</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="20%" style="width:20%; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Zeilenumbruch nach</span></p>
+<td style="vertical-align:top; width:20%; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Öffnungsrate messen</span></p>
 </td>
-<td valign="top" width="722" style="width:722px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Hiermit legen Sie Zeilenumbrüche für die Textversion Ihrer E-Mails fest. Als Standard ist ein Umbruch nach 72 Zeichen voreingestellt.</span></p>
+<td style="vertical-align:top; width:722px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Zur Messung der Öffnungsrate von HTML-Mailings können Sie hier automatisch ein Messpixel in Ihr E-Mailing einfügen und festlegen an welcher Stelle das Messpixel integriert werden soll.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:top; width:20%; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Zeichensatz</span></p>
+</td>
+<td style="vertical-align:top; width:722px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Sie können zwischen verschiedenen Zeichensätzen auswählen.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:top; width:20%; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Zeilenumbruch nach</span></p>
+</td>
+<td style="vertical-align:top; width:722px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Hiermit legen Sie Zeilenumbrüche für die Textversion Ihrer E-Mails fest. Als Standard ist ein Umbruch nach 72 Zeichen voreingestellt.</span></p>
 </td>
 </tr>
 </table>
 </div>
-<p>&nbsp;</p>
 
   <!--ZOOMSTOP-->
   </div>

@@ -1,6 +1,5 @@
-﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+﻿<!DOCTYPE HTML>
 <html>
-<!-- saved from url=(0029)http://www.helpandmanual.com/ -->
 <head>
    <title>Content Manager &gt; CM templates</title>
    <meta name="generator" content="Help & Manual">
@@ -74,19 +73,19 @@ function toggleToggles() {
 .topichead { padding: 5px 5px 20px 5px; }
 -->
 </style>   
-<script type="text/javascript" src="helpman_topicinit.js"></script>
-<!-- Redirect browser to frame page if page is not in the content frame. -->
-<script type="text/javascript">
-<!--
-if (location.search.lastIndexOf("toc=0")<=0) {
-  if (parent.frames.length==0) { parent.location.href="index.html?cm_templates.htm"; }
-  else { parent.quicksync('a9.4'); }
-}
-//-->
-</script>
-<script type="text/javascript" src="highlight.js"></script></head>
-<body onload="highlight();">
-<div id="hmpopupDiv" style="visibility:hidden; position:absolute; z-index:1000; "></div>
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <script type="text/javascript">
+     HMSyncTOC("index.html", "cm_templates.htm");
+   </script>
+   <script type="text/javascript" src="highlight.js"></script>
+   <script type="text/javascript">
+     $(document).ready(function(){highlight();});
+   </script>
+</head>
+<body>
 <!--ZOOMSTOP-->
 
 <div id="idheader">
@@ -127,11 +126,11 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 <div id="idcontent">
   <div id="innerdiv"> 
-  <p class="p_Heading2"><span class="f_Heading2">CM templates</span></p>
+  <h2 class="p_Heading2"><span class="f_Heading2">CM templates</span></h2>
 
   <!--ZOOMRESTART-->
   <p>A CM template gives a mailing boilerplate created using Content Manager its ultimate appearance. It combines the individual content modules into a basic HTML structure that you can modify to fit your mailing requirements. A CM template consists of individual content modules, whose structure is in its turn defined by module types. The placeholders in a CM template for content modules are defined via the</p>
-<p class="p_BeispieltextQuelltext"><span class="f_BeispieltextQuelltext">[agnDYN name="modulname"/]</span></p>
+<p class="p_BeispieltextQuelltext"><span class="f_BeispieltextQuelltext">[agnDYN name=&quot;modulname&quot;/]</span></p>
 <p>AGNITAS tag.</p>
 
   <!--ZOOMSTOP-->

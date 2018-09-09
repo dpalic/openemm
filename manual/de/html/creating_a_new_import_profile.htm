@@ -1,6 +1,5 @@
-﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+﻿<!DOCTYPE HTML>
 <html>
-<!-- saved from url=(0029)http://www.helpandmanual.com/ -->
 <head>
    <title>Empfänger - Kundendaten pflegen &gt; Importfunktion für Empfängerdaten &gt; Neues Importprofil erstellen</title>
    <meta name="generator" content="Help & Manual">
@@ -74,19 +73,19 @@ function toggleToggles() {
 .topichead { padding: 5px 5px 20px 5px; }
 -->
 </style>   
-<script type="text/javascript" src="helpman_topicinit.js"></script>
-<!-- Redirect browser to frame page if page is not in the content frame. -->
-<script type="text/javascript">
-<!--
-if (location.search.lastIndexOf("toc=0")<=0) {
-  if (parent.frames.length==0) { parent.location.href="index.html?creating_a_new_import_profile.htm"; }
-  else { parent.quicksync('a4.4.2'); }
-}
-//-->
-</script>
-<script type="text/javascript" src="highlight.js"></script></head>
-<body onload="highlight();">
-<div id="hmpopupDiv" style="visibility:hidden; position:absolute; z-index:1000; "></div>
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <script type="text/javascript">
+     HMSyncTOC("index.html", "creating_a_new_import_profile.htm");
+   </script>
+   <script type="text/javascript" src="highlight.js"></script>
+   <script type="text/javascript">
+     $(document).ready(function(){highlight();});
+   </script>
+</head>
+<body>
 <!--ZOOMSTOP-->
 
 <div id="idheader">
@@ -94,7 +93,7 @@ if (location.search.lastIndexOf("toc=0")<=0) {
   <tr>
     <td align="left" class="topichead">
       <p class="crumbs" id="idnav">
-        <a href="recipients___managing_customer.htm">Empfänger - Kundendaten pflegen</a> &gt; <a href="import_function_for_recipient_.htm">Importfunktion für Empfängerdaten</a>&nbsp;&gt;&nbsp;Neues Importprofil erstellen    
+        <a href="recipients_-_managing_customer.htm">Empfänger - Kundendaten pflegen</a> &gt; <a href="import_function_for_recipient_.htm">Importfunktion für Empfängerdaten</a>&nbsp;&gt;&nbsp;Neues Importprofil erstellen    
       </p>
     </td>
     <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
@@ -109,7 +108,7 @@ if (location.search.lastIndexOf("toc=0")<=0) {
         <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
         </a>
         
-          <a href="determining_the_csv_file_setti.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <a href="determining_the_csv-file_setti.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
           <img name=next src="btn_next_n.gif" border=0 alt="Next page">
           </a>
         
@@ -127,13 +126,13 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 <div id="idcontent">
   <div id="innerdiv"> 
-  <p class="p_Heading3"><span class="f_Heading3">Neues Importprofil erstellen</span></p>
+  <h3 class="p_Heading3"><span class="f_Heading3">Neues Importprofil erstellen</span></h3>
 
   <!--ZOOMRESTART-->
   <p>Wozu benötigt der OpenEMM ein Importprofil? CSV-Dateien stammen häufig aus vielen verschiedenen Quellen und wurden mit den unterschiedlichsten Programmen erstellt. Das Format der Daten ist allerdings in fast allen Fällen identisch. Damit Sie diese Parameter nicht bei jedem Import einer CSV-Datei wieder und wieder von neuem eingeben müssen, bietet der OpenEMM die Möglichkeit, diese Einstellungen in einem Importprofil abzulegen. Einmal angelegt spart Ihnen ein Importprofil sehr viel Zeit. Beim Import von Kundendaten via CSV-Datei genügt es, das passende Importprofil auszuwählen – der OpenEMM erledigt den Upload dann automatisch.</p>
 <p>Ein Importprofil enthält alle erforderlichen Informationen, um eine CSV-Datei zu lesen. Mit diesen Angaben kann der OpenEMM die Felder Ihrer CSV-Datei der richtigen Kategorie wie beispielsweise Name, E-Mail oder Geburtstag zuordnen und die Kundendaten in die Datenbank des OpenEMM übertragen.</p>
 <p>Um ein neues Importprofil zu erstellen, klicken Sie in der Navigationsleiste auf <span style="font-weight: bold; color: #006fb9;">Empfänger</span>, <span style="font-weight: bold; color: #006fb9;">Import</span> und wechseln Sie auf den Seitenreiter <span style="font-weight: bold; color: #006fb9;">Neues Importprofil</span>. Im folgenden Dialog legen Sie den Rahmen Ihres Importprofils fest.</p>
-<div class="p_ImageCaption"><div style="margin:0 auto;width:935px;padding:0px"><img src="mit_einem_importprofil_legen_sie_im.png" width="935" height="654" border="0" alt="Abb. 5.10: Mit einem Importprofil legen Sie im Detail fest, wie die Software CSV-Dateien beim Import in die Datenbank behandeln soll."><p style="text-align:center"><span class="f_ImageCaption">Abb. 5.10: Mit einem Importprofil legen Sie im Detail fest, wie die Software CSV-Dateien beim Import in die Datenbank behandeln soll.</span></p></div></div>
+<div class="p_ImageCaption"><div style="margin:0px auto 0px auto;width:939px;padding:0px 0px 0px 0px"><img src="mit_einem_importprofil_legen_sie_im.png" width="939" height="670" style="border:none" alt="Abb. 4.10: Mit einem Importprofil legen Sie im Detail fest, wie die Software CSV-Dateien beim Import in die Datenbank behandeln soll." title="Abb. 4.10: Mit einem Importprofil legen Sie im Detail fest, wie die Software CSV-Dateien beim Import in die Datenbank behandeln soll." /><p style="text-align:center"><span class="f_ImageCaption">Abb. 4.10: Mit einem Importprofil legen Sie im Detail fest, wie die Software CSV-Dateien beim Import in die Datenbank behandeln soll.</span></p></div></div>
 <p>Vergeben Sie im Feld <span style="font-weight: bold; color: #006fb9;">Name</span> eine aussagekräftige Bezeichnung für das neue Importprofil. Je anschaulicher der Name, desto leichter fällt es Ihnen und Dritten anschließend, das geeignete Profil beim Import von CSV-Daten zu wählen.</p>
 
   <!--ZOOMSTOP-->

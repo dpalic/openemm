@@ -1,6 +1,5 @@
-﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+﻿<!DOCTYPE HTML>
 <html>
-<!-- saved from url=(0029)http://www.helpandmanual.com/ -->
 <head>
    <title>Mailings - Newsletter versenden &gt; Mailings anlegen, bearbeiten und versenden &gt; Schablonendaten einblenden</title>
    <meta name="generator" content="Help & Manual">
@@ -74,19 +73,19 @@ function toggleToggles() {
 .topichead { padding: 5px 5px 20px 5px; }
 -->
 </style>   
-<script type="text/javascript" src="helpman_topicinit.js"></script>
-<!-- Redirect browser to frame page if page is not in the content frame. -->
-<script type="text/javascript">
-<!--
-if (location.search.lastIndexOf("toc=0")<=0) {
-  if (parent.frames.length==0) { parent.location.href="index.html?show_template_data.htm"; }
-  else { parent.quicksync('a3.2.3'); }
-}
-//-->
-</script>
-<script type="text/javascript" src="highlight.js"></script></head>
-<body onload="highlight();">
-<div id="hmpopupDiv" style="visibility:hidden; position:absolute; z-index:1000; "></div>
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <script type="text/javascript">
+     HMSyncTOC("index.html", "show_template_data.htm");
+   </script>
+   <script type="text/javascript" src="highlight.js"></script>
+   <script type="text/javascript">
+     $(document).ready(function(){highlight();});
+   </script>
+</head>
+<body>
 <!--ZOOMSTOP-->
 
 <div id="idheader">
@@ -94,7 +93,7 @@ if (location.search.lastIndexOf("toc=0")<=0) {
   <tr>
     <td align="left" class="topichead">
       <p class="crumbs" id="idnav">
-        <a href="mailings___sending_out_newslet.htm">Mailings - Newsletter versenden</a> &gt; <a href="create__edit_and_send_mailings.htm">Mailings anlegen, bearbeiten und versenden</a>&nbsp;&gt;&nbsp;Schablonendaten einblenden    
+        <a href="mailings_-_sending_out_newslet.htm">Mailings - Newsletter versenden</a> &gt; <a href="create__edit_and_send_mailings.htm">Mailings anlegen, bearbeiten und versenden</a>&nbsp;&gt;&nbsp;Schablonendaten einblenden    
       </p>
     </td>
     <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
@@ -127,12 +126,13 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 <div id="idcontent">
   <div id="innerdiv"> 
-  <p class="p_Heading3"><span class="f_Heading3">Schablonendaten einblenden</span></p>
+  <h3 class="p_Heading3"><span class="f_Heading3">Schablonendaten einblenden</span></h3>
 
   <!--ZOOMRESTART-->
   <p>Ein Mailing kann mit einer Schablone verknüpft sein. Um den Inhalt der Schablone anzuzeigen, müssen Sie nicht in die Rubrik <span style="font-weight: bold; color: #006fb9;">Schablonen</span> wechseln.</p>
-<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">1.</span></td><td><span class="f_Zahlen">Über den Link </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Schablone anzeigen</span><span class="f_Zahlen"> unter dem Bereich </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">E-Mail</span><span class="f_Zahlen"> blenden Sie die Eingabefelder für Text- und HTML-Version der Schablone ein. Haben Sie das Mailing ohne Schablone angelegt, so ist im Eingabefeld der Textversion nur die Zeile </span><span class="f_Zahlen" style="font-style: italic;">[agnDYN name="Text-Version"/]</span><span class="f_Zahlen"> eingetragen. Diese sorgt dafür, dass der Textbaustein Text-Version eingefügt wird. Dieser Textbaustein entspricht dem Eingabefeld für Text im Register </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Inhalt</span><span class="f_Zahlen">. Bei der Schablone für die HTML-Version ist entsprechend die Zeile </span><span class="f_Zahlen" style="font-style: italic;">[agnDYN name="HTML-Version"/]</span><span class="f_Zahlen"> vorhanden, die den HTML-Code aus dem Register </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Inhalt</span><span class="f_Zahlen"> einfügt. </span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">2.</span></td><td><span class="f_Zahlen">Sie dürfen hier auch Änderungen vornehmen und so die Schablone anpassen. Anschließend müssen Sie nur daran denken, die neuen Daten mit der Schaltfläche </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Speichern</span><span class="f_Zahlen"> an den OpenEMM zu übergeben.</span><br>
-<span class="f_Zahlen" style="font-weight: bold;">Beachten Sie:</span><span class="f_Zahlen"> Ändern Sie die Schablonendaten an dieser Stelle, so hat dies keinen Einfluss auf die Rubrik </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Schablonen</span><span class="f_Zahlen">. Dort finden Sie nur die Schablonen, die Sie explizit angelegt haben. Die Schabloneneingaben aus dem Mailing-Dialog werden nur zusammen mit diesem Mailing gespeichert. Wenn Sie ein Mailing gleich mit einer Schablone angelegt haben, so gelten die Änderungen nur für dieses Mailing, die originale Schablone bleibt unverändert.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">3.</span></td><td><span class="f_Zahlen">Sollen Änderungen an der Schablone automatisch auf alle Maillings übertragen werden, die diese Schablone verwenden, setzen Sie ein Häkchen bei der Option </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Mailing aktualisieren, wenn Schablone geändert wird</span><span class="f_Zahlen">.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">4.</span></td><td><span class="f_Zahlen">Wenn Sie die Schablonendaten nicht mehr benötigen, blenden Sie die Ansicht mit dem Link </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Schablone anzeigen</span><span class="f_Zahlen"> wieder aus.</span></td></tr></table></div><div class="p_ImageCaption"><div style="margin:0 auto;width:1008px;padding:0px"><img src="ueber_den_link_schablone_anzeigen_blenden.png" width="1008" height="871" border="0" alt="Abb. 3.19: Über den Link Schablone anzeigen blenden Sie die Eingabefelder für Text-, HTML- und M-HTML-Version einer Schablone ein."><p style="text-align:center"><span class="f_ImageCaption">Abb. 3.19: Über den Link Schablone anzeigen blenden Sie die Eingabefelder für Text-, HTML- und M-HTML-Version einer Schablone ein.</span></p></div></div>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="border:none;border-spacing:0px;padding:0px;line-height: normal;"><tr valign="baseline" style="vertical-align:baseline"><td style="border:none;width:16px"><span style="font-size:11pt; font-family: 'Arial';color:#000000;">1.</span></td><td style="border:none"><span class="f_Zahlen">Über den Link </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Schablone anzeigen</span><span class="f_Zahlen"> unter dem Bereich </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">E-Mail</span><span class="f_Zahlen"> blenden Sie die Eingabefelder für Text- und HTML-Version der Schablone ein. Haben Sie das Mailing ohne Schablone angelegt, so ist im Eingabefeld der Textversion nur die Zeile </span><span class="f_Zahlen" style="font-style: italic;">[agnDYN name=&quot;Text-Version&quot;/]</span><span class="f_Zahlen"> eingetragen. Diese sorgt dafür, dass der Textbaustein Text-Version eingefügt wird. Dieser Textbaustein entspricht dem Eingabefeld für Text im Register </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Inhalt</span><span class="f_Zahlen">. Bei der Schablone für die HTML-Version ist entsprechend die Zeile </span><span class="f_Zahlen" style="font-style: italic;">[agnDYN name=&quot;HTML-Version&quot;/]</span><span class="f_Zahlen"> vorhanden, die den HTML-Code aus dem Register </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Inhalt</span><span class="f_Zahlen"> einfügt.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="border:none;border-spacing:0px;padding:0px;line-height: normal;"><tr valign="baseline" style="vertical-align:baseline"><td style="border:none;width:16px"><span style="font-size:11pt; font-family: 'Arial';color:#000000;">2.</span></td><td style="border:none"><span class="f_Zahlen">Sie dürfen hier auch Änderungen vornehmen und so die Schablone anpassen. Anschließend müssen Sie nur daran denken, die neuen Daten mit der Schaltfläche </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Speichern</span><span class="f_Zahlen"> an den OpenEMM zu übergeben.</span><br />
+<span class="f_Zahlen" style="font-weight: bold;">Beachten Sie:</span><span class="f_Zahlen"> Ändern Sie die Schablonendaten an dieser Stelle, so hat dies keinen Einfluss auf die Rubrik </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Schablonen</span><span class="f_Zahlen">. Dort finden Sie nur die Schablonen, die Sie explizit angelegt haben. Die Schabloneneingaben aus dem Mailing-Dialog werden nur zusammen mit diesem Mailing gespeichert. Wenn Sie ein Mailing gleich mit einer Schablone angelegt haben, so gelten die Änderungen nur für dieses Mailing, die originale Schablone bleibt unverändert.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="border:none;border-spacing:0px;padding:0px;line-height: normal;"><tr valign="baseline" style="vertical-align:baseline"><td style="border:none;width:16px"><span style="font-size:11pt; font-family: 'Arial';color:#000000;">3.</span></td><td style="border:none"><span class="f_Zahlen">Sollen Änderungen an der Schablone automatisch auf alle Maillings übertragen werden, die diese Schablone verwenden, setzen Sie ein Häkchen bei der Option </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Mailing aktualisieren, wenn Schablone geändert wird</span><span class="f_Zahlen">.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="border:none;border-spacing:0px;padding:0px;line-height: normal;"><tr valign="baseline" style="vertical-align:baseline"><td style="border:none;width:16px"><span style="font-size:11pt; font-family: 'Arial';color:#000000;">4.</span></td><td style="border:none"><span class="f_Zahlen">Wenn Sie die Schablonendaten nicht mehr benötigen, blenden Sie die Ansicht mit dem Link </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Schablone anzeigen</span><span class="f_Zahlen"> wieder aus.</span></td></tr></table></div><div class="p_ImageCaption"><div style="margin:0px auto 0px auto;width:898px;padding:0px 0px 0px 0px"><img src="ueber_den_link_schablone_anzeigen_blenden.png" width="898" height="312" style="border:none" alt="Abb. 3.19: Über den Link Schablone anzeigen blenden Sie die Eingabefelder für Text- und HTML-Version einer Schablone ein." title="Abb. 3.19: Über den Link Schablone anzeigen blenden Sie die Eingabefelder für Text- und HTML-Version einer Schablone ein." /><p style="text-align:center"><span class="f_ImageCaption">Abb. 3.19: Über den Link Schablone anzeigen blenden Sie die Eingabefelder für Text- und HTML-Version einer Schablone ein.</span></p></div></div>
+<p class="p_ImageCaption"></p>
 
   <!--ZOOMSTOP-->
   </div>

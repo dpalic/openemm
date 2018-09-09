@@ -1,6 +1,5 @@
-﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+﻿<!DOCTYPE HTML>
 <html>
-<!-- saved from url=(0029)http://www.helpandmanual.com/ -->
 <head>
    <title>Content Manager &gt; Modultypen &gt; Vorhandene Modultypen anzeigen</title>
    <meta name="generator" content="Help & Manual">
@@ -74,19 +73,19 @@ function toggleToggles() {
 .topichead { padding: 5px 5px 20px 5px; }
 -->
 </style>   
-<script type="text/javascript" src="helpman_topicinit.js"></script>
-<!-- Redirect browser to frame page if page is not in the content frame. -->
-<script type="text/javascript">
-<!--
-if (location.search.lastIndexOf("toc=0")<=0) {
-  if (parent.frames.length==0) { parent.location.href="index.html?show_available_module_types.htm"; }
-  else { parent.quicksync('a9.2.1'); }
-}
-//-->
-</script>
-<script type="text/javascript" src="highlight.js"></script></head>
-<body onload="highlight();">
-<div id="hmpopupDiv" style="visibility:hidden; position:absolute; z-index:1000; "></div>
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <script type="text/javascript">
+     HMSyncTOC("index.html", "show_available_module_types.htm");
+   </script>
+   <script type="text/javascript" src="highlight.js"></script>
+   <script type="text/javascript">
+     $(document).ready(function(){highlight();});
+   </script>
+</head>
+<body>
 <!--ZOOMSTOP-->
 
 <div id="idheader">
@@ -127,15 +126,15 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 <div id="idcontent">
   <div id="innerdiv"> 
-  <p class="p_Heading3"><span class="f_Heading3">Vorhandene Modultypen anzeigen</span></p>
+  <h3 class="p_Heading3"><span class="f_Heading3">Vorhandene Modultypen anzeigen</span></h3>
 
   <!--ZOOMRESTART-->
   <p>Um die vorhandenen Modultypen anzuzeigen, klicken Sie in der Navigationsleiste auf den Eintrag <span style="font-weight: bold; color: #006fb9;">Mailings</span> und dann auf <span style="font-weight: bold; color: #006fb9;">Content Manager</span> und wählen Sie anschließend den Seitenreiter <span style="font-weight: bold; color: #006fb9;">Modultypen</span>. Der OpenEMM stellt auf der nun folgenden Seite sämtliche vorhandene Modultypen in Listenform dar.</p>
 <p>Zu jedem Modultyp zeigt die Tabelle mehrere Informationen an. In der linken Spalte steht der Name des Modultyps. Die mittlere Spalte stellt den Modultyp in einem kleinen Vorschaufenster mitsamt seinen Platzhaltern dar und informiert Sie so auf einen Blick über dessen Inhalt.</p>
 <p>Um eine größere Vorschau eines Modultyps zu erhalten, klicken Sie auf das jeweilige Vorschaubild. Die große Vorschau können Sie jederzeit wieder durch einen Klick auf den Befehl <span style="font-weight: bold; color: #006fb9;">Vorschau schließen</span> verkleinern, der sich direkt links oberhalb des jeweiligen Vorschau-Fensters befindet.</p>
 <p>Wie viele Modultyp-Einträge in der Liste erscheinen sollen, legen Sie über die Option <span style="font-weight: bold; color: #006fb9;">Listenlänge</span> fest. Voreingestellt sind <span style="font-weight: bold; color: #006fb9;">20</span> Einträge, die Sie alternativ auf <span style="font-weight: bold; color: #006fb9;">50</span> oder <span style="font-weight: bold; color: #006fb9;">100</span> Einträge erweitern können. Mit einem Klick auf die Schaltfläche <span style="font-weight: bold; color: #006fb9;">Anzeigen</span> übernehmen Sie diese Einstellung und der Content Manager aktualisiert die Darstellung der Liste.</p>
-<div class="p_ImageCaption"><div style="margin:0 auto;width:935px;padding:0px"><img src="der_content_managers_stellt_die_vorhandenen.png" width="935" height="316" border="0" alt="Abb. 11.4: Der Content Manager stellt die vorhandenen Modultypen übersichtlich in Listenform und mit Vorschau dar."><p style="text-align:center"><span class="f_ImageCaption">Abb. 11.4: Der Content Manager stellt die vorhandenen Modultypen übersichtlich in Listenform und mit Vorschau dar.</span></p></div></div>
-<p>In der rechten Spalte können Sie den Modultyp modifizieren. Dazu stehen Ihnen drei Möglichkeiten zur Verfügung: Modultyp löschen (Kapitel <a href="deleting_a_module_type.htm">Modultyp löschen</a>), Modultyp bearbeiten (Kapitel <a href="entering_basic_data.htm">Basisdaten eingeben</a>) oder den Modultyp zur weiteren Bearbeitung einem Content-Modul zuweisen (Kapitel <a href="adding_contents_to_a_module_ty.htm">Modultyp um Inhalte ergänzen und als Content-Modul speichern</a>). Mehr zu diesen Punkten erfahren Sie in den entsprechenden Kapiteln.</p>
+<div class="p_ImageCaption"><div style="margin:0px auto 0px auto;width:935px;padding:0px 0px 0px 0px"><img src="der_content_managers_stellt_die_vorhandenen.png" width="935" height="316" style="border:none" alt="Abb. 9.4: Der Content Manager stellt die vorhandenen Modultypen übersichtlich in Listenform und mit Vorschau dar." title="Abb. 9.4: Der Content Manager stellt die vorhandenen Modultypen übersichtlich in Listenform und mit Vorschau dar." /><p style="text-align:center"><span class="f_ImageCaption">Abb. 9.4: Der Content Manager stellt die vorhandenen Modultypen übersichtlich in Listenform und mit Vorschau dar.</span></p></div></div>
+<p>In der rechten Spalte können Sie den Modultyp modifizieren. Dazu stehen Ihnen drei Möglichkeiten zur Verfügung: Modultyp löschen (Kapitel <a href="deleting_a_module_type.htm" class="topiclink">Modultyp löschen</a>), Modultyp bearbeiten (Kapitel <a href="entering_basic_data.htm" class="topiclink">Basisdaten eingeben</a>) oder den Modultyp zur weiteren Bearbeitung einem Content-Modul zuweisen (Kapitel <a href="adding_contents_to_a_module_ty.htm" class="topiclink">Modultyp um Inhalte ergänzen und als Content-Modul speichern</a>). Mehr zu diesen Punkten erfahren Sie in den entsprechenden Kapiteln.</p>
 
   <!--ZOOMSTOP-->
   </div>

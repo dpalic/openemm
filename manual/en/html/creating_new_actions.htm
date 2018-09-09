@@ -1,6 +1,5 @@
-﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+﻿<!DOCTYPE HTML>
 <html>
-<!-- saved from url=(0029)http://www.helpandmanual.com/ -->
 <head>
    <title>Forms &amp; Actions &gt; Forms - Recipient management &gt; Forms &gt; Example form: Subscribing with double opt-in &gt; Creating new actions</title>
    <meta name="generator" content="Help & Manual">
@@ -74,19 +73,19 @@ function toggleToggles() {
 .topichead { padding: 5px 5px 20px 5px; }
 -->
 </style>   
-<script type="text/javascript" src="helpman_topicinit.js"></script>
-<!-- Redirect browser to frame page if page is not in the content frame. -->
-<script type="text/javascript">
-<!--
-if (location.search.lastIndexOf("toc=0")<=0) {
-  if (parent.frames.length==0) { parent.location.href="index.html?creating_new_actions.htm"; }
-  else { parent.quicksync('a8.1.2.5.2'); }
-}
-//-->
-</script>
-<script type="text/javascript" src="highlight.js"></script></head>
-<body onload="highlight();">
-<div id="hmpopupDiv" style="visibility:hidden; position:absolute; z-index:1000; "></div>
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <script type="text/javascript">
+     HMSyncTOC("index.html", "creating_new_actions.htm");
+   </script>
+   <script type="text/javascript" src="highlight.js"></script>
+   <script type="text/javascript">
+     $(document).ready(function(){highlight();});
+   </script>
+</head>
+<body>
 <!--ZOOMSTOP-->
 
 <div id="idheader">
@@ -94,13 +93,13 @@ if (location.search.lastIndexOf("toc=0")<=0) {
   <tr>
     <td align="left" class="topichead">
       <p class="crumbs" id="idnav">
-        <a href="sites__actions.htm">Forms &amp; Actions</a> &gt; <a href="forms___recipient_management.htm">Forms - Recipient management</a> &gt; <a href="forms.htm">Forms</a> &gt; <a href="example_subscribing_with_doubl.htm">Example form: Subscribing with double opt-in</a>&nbsp;&gt;&nbsp;Creating new actions    
+        <a href="sites__actions.htm">Forms &amp; Actions</a> &gt; <a href="forms_-_recipient_management.htm">Forms - Recipient management</a> &gt; <a href="forms.htm">Forms</a> &gt; <a href="example_subscribing_with_doubl.htm">Example form: Subscribing with double opt-in</a>&nbsp;&gt;&nbsp;Creating new actions    
       </p>
     </td>
     <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
         
         
-          <a href="create_an_action_based_mailing.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <a href="create_an_action-based_mailing.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
           <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
           </a>
         
@@ -127,12 +126,12 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 <div id="idcontent">
   <div id="innerdiv"> 
-  <p class="p_Heading5"><span class="f_Heading5">Creating new actions</span></p>
+  <h5 class="p_Heading5"><span class="f_Heading5">Creating new actions</span></h5>
 
   <!--ZOOMRESTART-->
-  <p>Now that the mailing is ready, you must create three actions for registering and conforming the registration. The registering action follows the same structure as that explained for registering in chapter "<a href="creating_a_form_to_enter_data.htm">Creating a form to enter data</a>". All three actions should have the <span style="font-weight: bold; color: #006fb9;">Only for forms</span> option activated. This will make action management easier once you have a lot of actions to manage.</p>
-<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">1.</span></td><td><span class="f_Zahlen">Create a new action named </span><span class="f_Zahlen" style="font-style: italic;">Double opt-in: Subscription</span><span class="f_Zahlen"> (or words to that effect). The name should above all be meaningful. Check the </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Use double opt-in</span><span class="f_Zahlen"> check box.</span></td></tr></table></div><div class="p_ImageCaption"><div style="margin:0 auto;width:939px;padding:0px"><img src="this_action_saves_the_new.png" width="939" height="453" border="0" alt="Fig. 8.13: This action saves the new subscriber’s data in the database, but marks them as blocked."><p style="text-align:center"><span class="f_ImageCaption">Fig. 8.13: This action saves the new subscriber’s data in the database, but marks them as blocked.</span></p></div></div>
-<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">2.</span></td><td><span class="f_Zahlen" style="font-family: 'Times New Roman';">The second action triggers the action-based mailing. Create a new action named </span><span class="f_Zahlen" style="font-family: 'Times New Roman'; font-style: italic;">Double opt-in: send email</span><span class="f_Zahlen" style="font-family: 'Times New Roman';">. Select </span><span class="f_Zahlen" style="font-family: 'Tahoma';">Send actionbased mailing</span><span class="f_Zahlen" style="font-family: 'Times New Roman';"> as the </span><span class="f_Zahlen" style="font-family: 'Tahoma';">Type</span><span class="f_Zahlen" style="font-family: 'Times New Roman';">. Click on </span><span class="f_Zahlen" style="font-family: 'Tahoma';">Save</span><span class="f_Zahlen" style="font-family: 'Times New Roman';"> to store the data in OpenEMM. </span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">3.</span></td><td><span class="f_Zahlen">In the </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Steps</span><span class="f_Zahlen"> section, select the </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Double: Confirmation mailing</span><span class="f_Zahlen"> you defined earlier from the drop-down list. Click on </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Save</span><span class="f_Zahlen"> to conclude your action.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">4.</span></td><td><span class="f_Zahlen" style="font-family: 'Times New Roman';">The third action is the double opt-in confirmation. Create a new action named </span><span class="f_Zahlen" style="font-family: 'Times New Roman'; font-style: italic;">Double opt-in: Confirmation</span><span class="f_Zahlen" style="font-family: 'Times New Roman';">. Select </span><span class="f_Zahlen" style="font-family: 'Tahoma';">Double opt-in confirmation</span><span class="f_Zahlen" style="font-family: 'Times New Roman';"> as the action type. Click on </span><span class="f_Zahlen" style="font-family: 'Tahoma';">Save</span><span class="f_Zahlen" style="font-family: 'Times New Roman';"> to store your entries. This concludes entries for the actions in question.</span></td></tr></table></div>
+  <p>Now that the mailing is ready, you must create three actions for registering and conforming the registration. The registering action follows the same structure as that explained for registering in chapter <a href="creating_a_form_to_enter_data.htm" class="topiclink">Creating a form to enter data</a>. All three actions should have the <span style="font-weight: bold; color: #006fb9;">Only for forms</span> option activated. This will make action management easier once you have a lot of actions to manage.</p>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="border:none;border-spacing:0px;padding:0px;line-height: normal;"><tr valign="baseline" style="vertical-align:baseline"><td style="border:none;width:16px"><span style="font-size:11pt; font-family: 'Arial';color:#000000;">1.</span></td><td style="border:none"><span class="f_Zahlen">Create a new action named </span><span class="f_Zahlen" style="font-style: italic;">Double opt-in: Subscription</span><span class="f_Zahlen"> (or words to that effect). The name should above all be meaningful. Check the </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Use double opt-in</span><span class="f_Zahlen"> check box.</span></td></tr></table></div><div class="p_ImageCaption"><div style="margin:0px auto 0px auto;width:938px;padding:0px 0px 0px 0px"><img src="this_action_saves_the_new.png" width="938" height="487" style="border:none" alt="Fig. 8.13: This action saves the new subscriber’s data in the database, but marks them as blocked." title="Fig. 8.13: This action saves the new subscriber’s data in the database, but marks them as blocked." /><p style="text-align:center"><span class="f_ImageCaption">Fig. 8.13: This action saves the new subscriber’s data in the database, but marks them as blocked.</span></p></div></div>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="border:none;border-spacing:0px;padding:0px;line-height: normal;"><tr valign="baseline" style="vertical-align:baseline"><td style="border:none;width:16px"><span style="font-size:11pt; font-family: 'Arial';color:#000000;">2.</span></td><td style="border:none"><span class="f_Zahlen">The second action triggers the action-based mailing. Create a new action named </span><span class="f_Zahlen" style="font-style: italic;">Double opt-in: send email</span><span class="f_Zahlen">. Select Send actionbased mailing as the </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Type</span><span class="f_Zahlen">. Click on </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Save</span><span class="f_Zahlen"> to store the data in OpenEMM. </span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="border:none;border-spacing:0px;padding:0px;line-height: normal;"><tr valign="baseline" style="vertical-align:baseline"><td style="border:none;width:16px"><span style="font-size:11pt; font-family: 'Arial';color:#000000;">3.</span></td><td style="border:none"><span class="f_Zahlen">In the </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Steps</span><span class="f_Zahlen"> section, select the </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Double: Confirmation mailing</span><span class="f_Zahlen"> you defined earlier from the drop-down list. Click on </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Save</span><span class="f_Zahlen"> to conclude your action.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="border:none;border-spacing:0px;padding:0px;line-height: normal;"><tr valign="baseline" style="vertical-align:baseline"><td style="border:none;width:16px"><span style="font-size:11pt; font-family: 'Arial';color:#000000;">4.</span></td><td style="border:none"><span class="f_Zahlen">The third action is the double opt-in confirmation. Create a new action named </span><span class="f_Zahlen" style="font-style: italic;">Double opt-in: Confirmation</span><span class="f_Zahlen">. Select </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Double opt-in confirmation</span><span class="f_Zahlen"> as the action type. Click on </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Save</span><span class="f_Zahlen"> to store your entries. This concludes entries for the actions in question.</span></td></tr></table></div>
   <!--ZOOMSTOP-->
   </div>
 </div>

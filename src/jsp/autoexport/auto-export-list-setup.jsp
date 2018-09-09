@@ -12,4 +12,4 @@
 <c:set var="agnSubtitleKey" value="autoExport.autoExport" scope="request" />
 <c:set var="agnNavigationKey" value="AutoExport" scope="request" />
 <c:set var="agnHighlightKey" value="default.Overview" scope="request" />
-<c:set var="agnHelpKey" value="dashboard" scope="request" />
+<c:set var="agnHelpKey" value="autoExport" scope="request" />

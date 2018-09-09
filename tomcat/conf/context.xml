@@ -23,9 +23,10 @@
 		name="jdbc/openemm_db"
 		driverClassName="com.mysql.jdbc.Driver"
 		type="javax.sql.DataSource"
-		maxCount="30"
 		maxActive="50"
 		maxWait="10000"
+		maxTotal="50"
+		maxWaitMillis="10000"
 		auth="Container"
 		username="agnitas"
 		password="openemm"
@@ -36,12 +37,16 @@
 		name="jdbc/openemm_cms_db"
 		driverClassName="com.mysql.jdbc.Driver"
 		type="javax.sql.DataSource"
-		maxCount="30"
 		maxActive="50"
 		maxWait="10000"
+		maxTotal="50"
+		maxWaitMillis="10000"
 		auth="Container"
 		username="agnitas"
 		password="openemm"
 		url="jdbc:mysql://localhost/openemm_cms?useUnicode=yes&amp;characterEncoding=UTF-8&amp;useOldAliasMetadataBehavior=true&amp;zeroDateTimeBehavior=convertToNull"
 	/>
+
+	<!--  attributes maxActive and maxWait are used by Tomcat 6 and 7, while maxTotal and maxWaitMillis are used by Tomcat 8 -->
+
 </Context>

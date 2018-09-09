@@ -1,6 +1,5 @@
-﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+﻿<!DOCTYPE HTML>
 <html>
-<!-- saved from url=(0029)http://www.helpandmanual.com/ -->
 <head>
    <title>Zielgruppen - dynamische Filter &gt; Was ist eine Zielgruppe?</title>
    <meta name="generator" content="Help & Manual">
@@ -74,19 +73,19 @@ function toggleToggles() {
 .topichead { padding: 5px 5px 20px 5px; }
 -->
 </style>   
-<script type="text/javascript" src="helpman_topicinit.js"></script>
-<!-- Redirect browser to frame page if page is not in the content frame. -->
-<script type="text/javascript">
-<!--
-if (location.search.lastIndexOf("toc=0")<=0) {
-  if (parent.frames.length==0) { parent.location.href="index.html?what_is_a_traget_group_.htm"; }
-  else { parent.quicksync('a6.1'); }
-}
-//-->
-</script>
-<script type="text/javascript" src="highlight.js"></script></head>
-<body onload="highlight();">
-<div id="hmpopupDiv" style="visibility:hidden; position:absolute; z-index:1000; "></div>
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <script type="text/javascript">
+     HMSyncTOC("index.html", "what_is_a_traget_group_.htm");
+   </script>
+   <script type="text/javascript" src="highlight.js"></script>
+   <script type="text/javascript">
+     $(document).ready(function(){highlight();});
+   </script>
+</head>
+<body>
 <!--ZOOMSTOP-->
 
 <div id="idheader">
@@ -94,18 +93,18 @@ if (location.search.lastIndexOf("toc=0")<=0) {
   <tr>
     <td align="left" class="topichead">
       <p class="crumbs" id="idnav">
-        <a href="target_groups___dynamic_filter.htm">Zielgruppen - dynamische Filter</a>&nbsp;&gt;&nbsp;Was ist eine Zielgruppe?    
+        <a href="target_groups_-_dynamic_filter.htm">Zielgruppen - dynamische Filter</a>&nbsp;&gt;&nbsp;Was ist eine Zielgruppe?    
       </p>
     </td>
     <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
         
         
-          <a href="target_groups___dynamic_filter.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <a href="target_groups_-_dynamic_filter.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
           <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
           </a>
         
         
-        <a href="target_groups___dynamic_filter.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <a href="target_groups_-_dynamic_filter.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
         <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
         </a>
         
@@ -127,10 +126,10 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 <div id="idcontent">
   <div id="innerdiv"> 
-  <p class="p_Heading2"><span class="f_Heading2">Was ist eine Zielgruppe?</span></p>
+  <h2 class="p_Heading2"><span class="f_Heading2">Was ist eine Zielgruppe?</span></h2>
 
   <!--ZOOMRESTART-->
-  <p>Mit einer Zielgruppe selektieren Sie wie bei der Suchfunktion (siehe Kapitel  <a href="searching_for_recipients.htm">Empfänger suchen</a>) bestimmte Empfänger. Zunächst definieren Sie die Suchregeln für die Zielgruppe. Dann speichern Sie diese Definition unter einem aussagekräftigen Namen.</p>
+  <p>Mit einer Zielgruppe selektieren Sie wie bei der Suchfunktion (siehe Kapitel  <a href="searching_for_recipients.htm" class="topiclink">Empfänger suchen</a>) bestimmte Empfänger. Zunächst definieren Sie die Suchregeln für die Zielgruppe. Dann speichern Sie diese Definition unter einem aussagekräftigen Namen.</p>
 <p>Eine Zielgruppe ist also keine feste Markierung einzelner Empfänger, sondern sozusagen ein Filter aus selbst definierten Suchregeln. Wenn Sie einen neuen Empfänger in die Datenbank aufnehmen, gehört er automatisch zu einer Zielgruppe, falls er deren Suchbedingungen erfüllt. Durch die Definition einer Zielgruppe ändern Sie also nichts an der Empfängerdatenbank.</p>
 <p>Bei verschiedenen Funktionen verwendet der OpenEMM eine gespeicherte Zielgruppe als Filter für Empfänger. So dürfen Sie etwa die Empfänger einer Mailing-Liste über eine Zielgruppe einschränken. Bei der statistischen Auswertung von Mailings kommen ebenfalls Zielgruppen zum Einsatz. Und das sind nur einige der vielfältigen Anwendungsmöglichkeiten.</p>
 

@@ -1,6 +1,5 @@
-﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+﻿<!DOCTYPE HTML>
 <html>
-<!-- saved from url=(0029)http://www.helpandmanual.com/ -->
 <head>
    <title>Empfänger - Kundendaten pflegen &gt; Importfunktion für Empfängerdaten &gt; Der Import-Assistent &gt; Zuweisung der CSV zu den Datenbank-Spalten</title>
    <meta name="generator" content="Help & Manual">
@@ -74,19 +73,19 @@ function toggleToggles() {
 .topichead { padding: 5px 5px 20px 5px; }
 -->
 </style>   
-<script type="text/javascript" src="helpman_topicinit.js"></script>
-<!-- Redirect browser to frame page if page is not in the content frame. -->
-<script type="text/javascript">
-<!--
-if (location.search.lastIndexOf("toc=0")<=0) {
-  if (parent.frames.length==0) { parent.location.href="index.html?assigning_the_csv_columns_to_t.htm"; }
-  else { parent.quicksync('a4.4.4.1'); }
-}
-//-->
-</script>
-<script type="text/javascript" src="highlight.js"></script></head>
-<body onload="highlight();">
-<div id="hmpopupDiv" style="visibility:hidden; position:absolute; z-index:1000; "></div>
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <script type="text/javascript">
+     HMSyncTOC("index.html", "assigning_the_csv_columns_to_t.htm");
+   </script>
+   <script type="text/javascript" src="highlight.js"></script>
+   <script type="text/javascript">
+     $(document).ready(function(){highlight();});
+   </script>
+</head>
+<body>
 <!--ZOOMSTOP-->
 
 <div id="idheader">
@@ -94,7 +93,7 @@ if (location.search.lastIndexOf("toc=0")<=0) {
   <tr>
     <td align="left" class="topichead">
       <p class="crumbs" id="idnav">
-        <a href="recipients___managing_customer.htm">Empfänger - Kundendaten pflegen</a> &gt; <a href="import_function_for_recipient_.htm">Importfunktion für Empfängerdaten</a> &gt; <a href="the_import_assistant.htm">Der Import-Assistent</a>&nbsp;&gt;&nbsp;Zuweisung der CSV zu den Datenbank-Spalten    
+        <a href="recipients_-_managing_customer.htm">Empfänger - Kundendaten pflegen</a> &gt; <a href="import_function_for_recipient_.htm">Importfunktion für Empfängerdaten</a> &gt; <a href="the_import_assistant.htm">Der Import-Assistent</a>&nbsp;&gt;&nbsp;Zuweisung der CSV zu den Datenbank-Spalten    
       </p>
     </td>
     <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
@@ -127,16 +126,16 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 <div id="idcontent">
   <div id="innerdiv"> 
-  <p class="p_Heading4"><span class="f_Heading4">Zuweisung der CSV zu den Datenbank-Spalten</span></p>
+  <h4 class="p_Heading4"><span class="f_Heading4">Zuweisung der CSV zu den Datenbank-Spalten</span></h4>
 
   <!--ZOOMRESTART-->
   <p><span class="f_ClImport_Assigning">Der Import-Assistent liest nun die CSV-Datei ein und geht bei deren Analyse exakt so vor, wie im Import-Profil festgelegt: Sind die Spaltennamen im Importprofil identisch mit den Spaltennamen der CSV-Datei, werden die beiden Spalten einander automatisch zugeordnet. </span>Im nächsten Fenster zeigt das System eine Vorschau der zu importierenden Empfängerdaten an und stellt dazu maximal die ersten 20 Zeilen Ihrer CSV-Datei dar.</p>
-<div class="p_ImageCaption"><div style="margin:0 auto;width:937px;padding:0px"><img src="der_import-assistent_zeigt_eine_bis.png" width="937" height="772" border="0" alt="Abb. 5.19: Der Import-Assistent zeigt eine bis zu 20 Zeilen lange Vorschau der CSV-Daten."><p style="text-align:center"><span class="f_ImageCaption">Abb. 5.19: Der Import-Assistent zeigt eine bis zu 20 Zeilen lange Vorschau der CSV-Daten.</span></p></div></div>
+<div class="p_ImageCaption"><div style="margin:0px auto 0px auto;width:938px;padding:0px 0px 0px 0px"><img src="der_import-assistent_zeigt_eine_bis.png" width="938" height="405" style="border:none" alt="Abb. 4.19: Der Import-Assistent zeigt eine bis zu 20 Zeilen lange Vorschau der CSV-Daten." title="Abb. 4.19: Der Import-Assistent zeigt eine bis zu 20 Zeilen lange Vorschau der CSV-Daten." /><p style="text-align:center"><span class="f_ImageCaption">Abb. 4.19: Der Import-Assistent zeigt eine bis zu 20 Zeilen lange Vorschau der CSV-Daten.</span></p></div></div>
 <p>In der Vorschau erscheinen genau die Spalten, die tatsächlich importiert werden sollen. Beachten Sie, dass es sich lediglich um eine Vorschau handelt, denn die Daten lassen sich nicht ändern. Falls Sie hier Fehler entdecken, müssen Sie diese in der Originaldatei ändern und eine neue CSV-Datei für den Import bereitstellen.</p>
 <p><span style="font-weight: bold;">Bitte beachten Sie:</span> Der OpenEMM prüft in diesem ersten Schritt lediglich, ob die CSV-Daten im richtigen Format vorliegen und ob für jeden Empfänger eine ausgefüllte Schlüsselspalte existiert. Ist beispielsweise die E-Mail-Adresse als Schlüsselspalte festgelegt, darf ihr Inhalt nicht leer sein. Tiefer gehende syntaktische Checks führt der OpenEMM hier jedoch noch nicht durch. Das System kontrolliert also weder die Groß- oder Kleinschreibung noch die Rechtschreibung bei den CSV-Daten.</p>
 <p>Sie sollten vor dem Import deshalb die ganze CSV-Liste gründlich durchgehen. Die Erfahrung zeigt, dass in Importdateien oft fehlerhafte Daten enthalten sind. Diese machen nach dem Import teils erhebliche Probleme. Sind solche fehlerhaften Empfängerdaten erst einmal in der Datenbank des OpenEMM gespeichert, ist das Aufspüren schwierig und mit viel Aufwand verbunden. Gerade umfangreiche Importe bergen oft viel Konfliktpotential.</p>
-<p>Zusätzlich zur Vorschau bietet Ihnen der Assistent in diesem Import-Schritt die Möglichkeit, die in der CSV-Datei aufgeführten Empfänger direkt einer Mailing-Liste zuzuweisen. Mehr dazu erfahren Sie in Kapitel <a href="selection_of_mailing_lists.htm">Auswahl der Mailing-Listen</a>. Mit einem Klick auf die Schaltfläche <span style="font-weight: bold; color: #006fb9;">Import-Start</span> starten Sie den eigentlichen Importvorgang.</p>
-<p><span style="font-weight: bold;">Hinweis: </span>Damit Sie die Empfänger-Daten einer Mailing-Liste zuweisen können, muss diese bereits im OpenEMM angelegt sein. Mehr zum Thema Mailing-Listen erfahren Sie in Kapitel <a href="mailing_lists___managing_list_.htm">Mailing-Listen - Abonnements verwalten</a>.</p>
+<p>Zusätzlich zur Vorschau bietet Ihnen der Assistent in diesem Import-Schritt die Möglichkeit, die in der CSV-Datei aufgeführten Empfänger direkt einer Mailing-Liste zuzuweisen. Mehr dazu erfahren Sie in Kapitel <a href="selection_of_mailing_lists.htm" class="topiclink">Auswahl der Mailing-Listen</a>. Mit einem Klick auf die Schaltfläche <span style="font-weight: bold; color: #006fb9;">Import-Start</span> starten Sie den eigentlichen Importvorgang.</p>
+<p><span style="font-weight: bold;">Hinweis: </span>Damit Sie die Empfänger-Daten einer Mailing-Liste zuweisen können, muss diese bereits im OpenEMM angelegt sein. Mehr zum Thema Mailing-Listen erfahren Sie in Kapitel <a href="mailing_lists_-_managing_list_.htm" class="topiclink">Mailing-Listen - Abonnements verwalten</a>.</p>
 
   <!--ZOOMSTOP-->
   </div>

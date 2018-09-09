@@ -115,7 +115,7 @@ public class DynamicTagContentServiceImpl implements DynamicTagContentService, A
 		dynamicTag.addContent(aContent);
 
         try {
-        	mailing.buildDependencies(false, applicationContext);
+        	mailing.buildDependencies(false, applicationContext, false);
         } catch (Exception e) {
         	throw new RuntimeException(e);
         }

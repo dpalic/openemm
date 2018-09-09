@@ -1,25 +1,32 @@
 package org.agnitas.emm.core.autoimport.web;
 
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.agnitas.beans.ImportProfile;
 import org.agnitas.beans.Mailinglist;
 import org.agnitas.emm.core.autoimport.bean.AutoImport;
 import org.agnitas.emm.core.autoimport.forms.AutoImportForm;
 import org.agnitas.emm.core.autoimport.service.AutoImportService;
 import org.agnitas.util.AgnUtils;
+import org.agnitas.util.FtpHelper;
 import org.agnitas.util.SFtpHelper;
-import org.agnitas.util.SafeString;
 import org.agnitas.web.DispatchBaseAction;
-import org.apache.struts.action.*;
+import org.apache.log4j.Logger;
+import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
-
 public class AutoImportAction extends DispatchBaseAction {
+    private static final transient Logger logger = Logger.getLogger(AutoImportAction.class);
 
 	private AutoImportService autoImportService;
 
@@ -79,22 +86,42 @@ public class AutoImportAction extends DispatchBaseAction {
 			return mapping.findForward("logon");
 		}
 		AutoImportForm autoImportForm = (AutoImportForm) form;
-		SFtpHelper sftpHelper = null;
 		boolean connectionStatusOK = false;
-		try {
-			sftpHelper = new SFtpHelper(autoImportForm.getAutoImport().getFileServer());
-			if (autoImportForm.getAutoImport().isAllowUnknownHostKeys()) {
-				sftpHelper.setAllowUnknownHostKeys(true);
+
+		if (autoImportForm.getAutoImport().getFileServer().toLowerCase().startsWith("ftp://")) {
+        	// if configured so, load via FTP
+			FtpHelper ftpHelper = null;
+			try {
+				ftpHelper = new FtpHelper(autoImportForm.getAutoImport().getFileServer());
+				ftpHelper.connect();
+				connectionStatusOK = true;
+			} catch (Exception e) {
+				logger.error("AutoImportAction - error while connecting to ftp", e);
+				connectionStatusOK = false;
+			} finally {
+				if (ftpHelper != null) {
+					ftpHelper.close();
+				}
 			}
-			sftpHelper.connect();
-			connectionStatusOK = true;
-		} catch (Exception e) {
-			connectionStatusOK = false;
-		} finally {
-			if (sftpHelper != null) {
-				sftpHelper.close();
-			}
-		}
+        } else {
+        	// default: send load SFTP
+        	SFtpHelper sftpHelper = null;
+    		try {
+    			sftpHelper = new SFtpHelper(autoImportForm.getAutoImport().getFileServer());
+    			if (autoImportForm.getAutoImport().isAllowUnknownHostKeys()) {
+    				sftpHelper.setAllowUnknownHostKeys(true);
+    			}
+    			sftpHelper.connect();
+    			connectionStatusOK = true;
+    		} catch (Exception e) {
+    			logger.error("AutoImportAction - error while connecting to sftp", e);
+    			connectionStatusOK = false;
+    		} finally {
+    			if (sftpHelper != null) {
+    				sftpHelper.close();
+    			}
+    		}
+        }
 		
 		loadAutoImport(form, request);
 		prepareViewPage(form, request);

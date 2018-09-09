@@ -137,7 +137,7 @@ public class ClassicTemplateGenerator implements ApplicationContextAware {
 					bindWithContentModules(mailing, copyImages);
 				}
 				try {
-					mailing.buildDependencies(true, applicationContext);
+					mailing.buildDependencies(true, applicationContext, true);
 				} catch (Exception e) {
 					logger.warn("Can`t build mailing dependencies", e);
 				}

@@ -56,7 +56,6 @@ import org.agnitas.beans.Mailing;
 import org.agnitas.beans.MailingComponent;
 import org.agnitas.beans.Mediatype;
 import org.agnitas.beans.MediatypeEmail;
-import org.agnitas.beans.TagDefinition.TagType;
 import org.agnitas.beans.TagDetails;
 import org.agnitas.beans.TrackableLink;
 import org.agnitas.dao.DynamicTagDao;
@@ -1575,12 +1574,12 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 	}
 
 	@Override
-	public boolean buildDependencies(boolean scanDynTags, ApplicationContext con) throws Exception {
-		return buildDependencies(scanDynTags, null, con);
+	public boolean buildDependencies(boolean scanDynTags, ApplicationContext con, boolean cleanupComponents) throws Exception {
+		return buildDependencies(scanDynTags, null, con, cleanupComponents);
 	}
 
 	@Override
-	public boolean buildDependencies(boolean scanDynTags, List<String> dynNamesForDeletion, ApplicationContext con) throws Exception {
+	public boolean buildDependencies(boolean scanDynTags, List<String> dynNamesForDeletion, ApplicationContext con, boolean cleanupComponents) throws Exception {
 		Vector<String> dynTags = new Vector<String>();
 		Vector<String> components = new Vector<String>();
 		Vector<String> links = new Vector<String>();
@@ -1599,9 +1598,11 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 		}
 		// scan for Components
 		// in template-components and dyncontent
-		components.addAll(this.scanForComponents(con));
-		this.cleanupMailingComponents(components);
-
+		if(cleanupComponents) {
+			components.addAll(this.scanForComponents(con));
+			this.cleanupMailingComponents(components);
+		}
+		
 		// scan for Links
 		// in template-components and dyncontent
 		links.addAll(this.scanForLinks(con));

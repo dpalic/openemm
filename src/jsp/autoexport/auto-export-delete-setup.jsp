@@ -13,4 +13,4 @@
 <c:set var="agnNavigationKey" value="AutoExportView" scope="request" />
 <c:set var="agnHighlightKey" value="autoExport.autoExport" scope="request" />
 <c:set var="agnNavHrefAppend" value="&autoExportId=${autoExportForm.autoExportId}" scope="request" />
-<c:set var="agnHelpKey" value="dashboard" scope="request" />
+<c:set var="agnHelpKey" value="autoExport" scope="request" />

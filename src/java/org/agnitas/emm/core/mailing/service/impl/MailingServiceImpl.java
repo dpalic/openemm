@@ -104,7 +104,7 @@ public abstract class MailingServiceImpl implements MailingService, ApplicationC
 		aMailing.addComponent(comp);
 
 		try {
-			aMailing.buildDependencies(true, applicationContext);
+			aMailing.buildDependencies(true, applicationContext, false);
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 			throw new RuntimeException(e);
@@ -240,7 +240,7 @@ public abstract class MailingServiceImpl implements MailingService, ApplicationC
 		Mailing aMailing = prepareMailingForAddOrUpdate(model, getMailing(model), actions);
 
 		try {
-			aMailing.buildDependencies(true, applicationContext);
+			aMailing.buildDependencies(true, applicationContext, false);
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 			throw new RuntimeException(e);

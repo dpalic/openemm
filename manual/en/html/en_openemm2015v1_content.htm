@@ -1,0 +1,640 @@
+﻿<!DOCTYPE HTML>
+<html><head>
+   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+
+   <!-- This line forces IE8 into IE7 mode, safer until IE8 is better known -->
+   <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7" />
+
+<!-- This line includes the general project style sheet (not required) -->
+   <link type="text/css" href="default.css" rel="stylesheet">
+   <link type="text/css" href="custom.css" rel="stylesheet">
+
+<!-- This block defines the styles of the TOC headings, change them as needed -->
+   <style type="text/css">
+       a { color: black; text-decoration: none }
+       a:visited {color: black}
+       a:hover { text-decoration: underline }
+       .navtitle { font-size: 14pt; font-weight: bold; margin-bottom: 16px; }
+       .navbar { font-size: 10pt; }
+       .pdf_manual { color: #a91b1b; text-decoration: none; }
+
+       SPAN.heading1 { font-weight: normal; color: #000000; text-decoration: none }
+       SPAN.heading2 { font-weight: normal; color: #000000; text-decoration: none }
+       SPAN.heading3 { font-weight: normal; color: #000000; text-decoration: none }
+       SPAN.heading4 { font-weight: normal; color: #000000; text-decoration: none }
+       SPAN.heading5 { font-weight: normal; color: #000000; text-decoration: none }
+       SPAN.heading6 { font-weight: normal; color: #000000; text-decoration: none }
+
+       SPAN.hilight1 { font-weight: bold; color: #3C79A5; text-decoration: none }
+       SPAN.hilight2 { font-weight: bold; color: #3C79A5; text-decoration: none }
+       SPAN.hilight3 { font-weight: bold; color: #3C79A5; text-decoration: none }
+       SPAN.hilight4 { font-weight: bold; color: #3C79A5; text-decoration: none }
+       SPAN.hilight5 { font-weight: bold; color: #3C79A5; text-decoration: none }
+       SPAN.hilight6 { font-weight: bold; color: #3C79A5; text-decoration: none }
+       
+       SPAN.heading1 img { margin-right: 8px }
+
+   TD.toc { font-size: 12px; font-family: Arial,Helvetica; padding-bottom: 2px; padding-right: 3px; vertical-align: middle }
+   TABLE.toc { font-size: 12px; font-family: Arial,Helvetica; border: 0 none; margin: 0px 0px 0px 0px; padding: 0px 0px 0px 4px; }
+   IMG.icon {}
+
+</style>
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript">
+     var parentScope = (parent.hmNavigationFrame);
+     if (!parentScope) {
+		      var s = document.createElement("script");
+		      s.setAttribute("type","text/javascript");
+		      s.setAttribute("src", "helpman_navigation.js");
+		      document.getElementsByTagName("head")[0].appendChild(s);
+	    }
+     else {
+       if (initialtocstate != "expandall") parent.hmAddCss(document, "#toc li ul { display: none }");
+     }
+     function loadicons() { var icons = new Array(); for (i=0; i<arguments.length; i++) { icons[i] = new Image(); icons[i].src = arguments[i]; } }
+     function loadtoc() { if (parentScope) parent.loadstate(document.getElementById("toc")); else loadstate(document.getElementById("toc")); }
+     function savetoc() { if (parentScope) parent.savestate(document.getElementById("toc")); else savestate(document.getElementById("toc")); }
+     function clicked(node, event) { deselect(); if (parentScope) parent.hmNodeClicked(node, event); else hmNodeClicked(node, event); }
+     function dblclicked(node) { if (parentScope) parent.hmNodeDblclicked(node); else hmNodeDblclicked(node); }
+     function deselect() { if (window.getSelection) window.getSelection().removeAllRanges(); else if (document.selection) document.selection.empty(); }
+     $(document).ready(function(){
+       loadtoc();
+       $(window).onunload = savetoc;
+     });
+   </script>
+</head>
+<body bgcolor="#FFFFFF">
+<table class="toc" cellspacing="0" cellpadding="0" border="0">
+       <tr valign="top">
+           <td class="toc" width="16" align="right"><img src="pdf.png" class="icon" width="16" border="0"></td>
+           <td class="toc" align="left"><a href="../pdf/manual_pdf_en.pdf" target="hmcontent" class="pdf_manual">OpenEMM Manual</a></span></td>
+       </tr>
+</table>
+
+<!-- Placeholder for the TOC - this variable is REQUIRED! -->
+<ul id="toc" style="list-style-type:none;display:block;padding-left:0;margin:0">
+<li class="heading1" id="i1" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading1" id="a1" href="produktname_-_the_basics.htm" target="hmcontent"><span class="heading1" id="s1" ondblclick="return dblclicked(this)">OpenEMM - The Basics</span></a>
+<ul id="ul1" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading2" id="i1.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading2" id="a1.1" href="mailings_under_control.htm" target="hmcontent"><span class="heading2" id="s1.1">Introduction to the OpenEMM</span></a>
+</li>
+<li class="heading2" id="i1.2" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading2" id="a1.2" href="functions_of_the_produktname.htm" target="hmcontent"><span class="heading2" id="s1.2">Functions of the OpenEMM</span></a>
+</li>
+<li class="heading2" id="i1.3" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading2" id="a1.3" href="overview_this_is_how_the_modul.htm" target="hmcontent"><span class="heading2" id="s1.3">Overview: This is how the modules interact</span></a>
+</li>
+</ul>
+</li>
+<li class="heading1" id="i2" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading1" id="a2" href="using_the_produktname_to_contr.htm" target="hmcontent"><span class="heading1" id="s2" ondblclick="return dblclicked(this)">Handling - Navigate through OpenEMM</span></a>
+<ul id="ul2" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading2" id="i2.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading2" id="a2.1" href="starting_the_produktname.htm" target="hmcontent"><span class="heading2" id="s2.1">Starting the OpenEMM</span></a>
+</li>
+<li class="heading2" id="i2.2" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading2" id="a2.2" href="user_self-administration.htm" target="hmcontent"><span class="heading2" id="s2.2">User Self-Administration</span></a>
+</li>
+<li class="heading2" id="i2.3" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading2" id="a2.3" href="navigation_bar_and_mailing_elements.htm" target="hmcontent"><span class="heading2" id="s2.3">Navigation bar and mailing elements</span></a>
+</li>
+<li class="heading2" id="i2.4" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading2" id="a2.4" href="online_help.htm" target="hmcontent"><span class="heading2" id="s2.4">Online Help</span></a>
+</li>
+</ul>
+</li>
+<li class="heading1" id="i3" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading1" id="a3" href="mailings_-_sending_out_newslet.htm" target="hmcontent"><span class="heading1" id="s3" ondblclick="return dblclicked(this)">Mailings - Sending out newsletters</span></a>
+<ul id="ul3" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading2" id="i3.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading2" id="a3.1" href="what_is_a_mailing_.htm" target="hmcontent"><span class="heading2" id="s3.1">What is a mailing?</span></a>
+</li>
+<li class="heading2" id="i3.2" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading2" id="a3.2" href="create__edit_and_send_mailings.htm" target="hmcontent"><span class="heading2" id="s3.2" ondblclick="return dblclicked(this)">Create, edit and send mailings</span></a>
+<ul id="ul3.2" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading3" id="i3.2.1" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading3" id="a3.2.1" href="creating_a_new_mailing.htm" target="hmcontent"><span class="heading3" id="s3.2.1" ondblclick="return dblclicked(this)">Creating a new mailing</span></a>
+<ul id="ul3.2.1" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading4" id="i3.2.1.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a3.2.1.1" href="create_new_mailing_using_the_w.htm" target="hmcontent"><span class="heading4" id="s3.2.1.1">Create new mailing using the wizard</span></a>
+</li>
+<li class="heading4" id="i3.2.1.2" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a3.2.1.2" href="entering_basic_mailing_data.htm" target="hmcontent"><span class="heading4" id="s3.2.1.2">Entering basic mailing data</span></a>
+</li>
+<li class="heading4" id="i3.2.1.3" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a3.2.1.3" href="selecting_target_groups.htm" target="hmcontent"><span class="heading4" id="s3.2.1.3">Selecting target groups</span></a>
+</li>
+<li class="heading4" id="i3.2.1.4" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a3.2.1.4" href="linking_target_groups.htm" target="hmcontent"><span class="heading4" id="s3.2.1.4">Linking target groups</span></a>
+</li>
+<li class="heading4" id="i3.2.1.5" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a3.2.1.5" href="entering_further_mailing_data.htm" target="hmcontent"><span class="heading4" id="s3.2.1.5">Entering further mailing data</span></a>
+</li>
+<li class="heading4" id="i3.2.1.6" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a3.2.1.6" href="saving_a_new_mailing.htm" target="hmcontent"><span class="heading4" id="s3.2.1.6">Saving a new mailing</span></a>
+</li>
+</ul>
+</li>
+<li class="heading3" id="i3.2.2" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a3.2.2" href="list_existing_mailings.htm" target="hmcontent"><span class="heading3" id="s3.2.2">List existing mailings</span></a>
+</li>
+<li class="heading3" id="i3.2.3" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a3.2.3" href="show_template_data.htm" target="hmcontent"><span class="heading3" id="s3.2.3">Show template data</span></a>
+</li>
+<li class="heading3" id="i3.2.4" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a3.2.4" href="copying_a_mailing.htm" target="hmcontent"><span class="heading3" id="s3.2.4">Copying a mailing</span></a>
+</li>
+<li class="heading3" id="i3.2.5" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading3" id="a3.2.5" href="inserting_content.htm" target="hmcontent"><span class="heading3" id="s3.2.5" ondblclick="return dblclicked(this)">Inserting content</span></a>
+<ul id="ul3.2.5" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading4" id="i3.2.5.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a3.2.5.1" href="creating_text_and_html_modules.htm" target="hmcontent"><span class="heading4" id="s3.2.5.1">Creating text and HTML modules</span></a>
+</li>
+</ul>
+</li>
+<li class="heading3" id="i3.2.6" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a3.2.6" href="using_graphic_elements.htm" target="hmcontent"><span class="heading3" id="s3.2.6">Using graphic elements</span></a>
+</li>
+<li class="heading3" id="i3.2.7" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading3" id="a3.2.7" href="sending_file_attachments.htm" target="hmcontent"><span class="heading3" id="s3.2.7" ondblclick="return dblclicked(this)">Sending file attachments</span></a>
+<ul id="ul3.2.7" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading4" id="i3.2.7.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a3.2.7.1" href="sending_normal_file_attachment.htm" target="hmcontent"><span class="heading4" id="s3.2.7.1">Sending normal file attachment</span></a>
+</li>
+</ul>
+</li>
+<li class="heading3" id="i3.2.8" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading3" id="a3.2.8" href="using_trackable_links.htm" target="hmcontent"><span class="heading3" id="s3.2.8" ondblclick="return dblclicked(this)">Using trackable links</span></a>
+<ul id="ul3.2.8" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading4" id="i3.2.8.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a3.2.8.1" href="create_a_link_in_the_html_vers.htm" target="hmcontent"><span class="heading4" id="s3.2.8.1">Create a link in the HTML version</span></a>
+</li>
+<li class="heading4" id="i3.2.8.2" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a3.2.8.2" href="create_a_link_in_the_text_vers.htm" target="hmcontent"><span class="heading4" id="s3.2.8.2">Create a link in the text version</span></a>
+</li>
+<li class="heading4" id="i3.2.8.3" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a3.2.8.3" href="insert_agnitas-tags_into_track.htm" target="hmcontent"><span class="heading4" id="s3.2.8.3">Building AGNITAS tags into trackable links</span></a>
+</li>
+<li class="heading4" id="i3.2.8.4" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a3.2.8.4" href="create_trackable_and_non-track.htm" target="hmcontent"><span class="heading4" id="s3.2.8.4">Create trackable and non-trackable links</span></a>
+</li>
+<li class="heading4" id="i3.2.8.5" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a3.2.8.5" href="click_summation_for_trackable_.htm" target="hmcontent"><span class="heading4" id="s3.2.8.5">Click summation for trackable links</span></a>
+</li>
+</ul>
+</li>
+<li class="heading3" id="i3.2.9" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading3" id="a3.2.9" href="creating_customized_mailings.htm" target="hmcontent"><span class="heading3" id="s3.2.9" ondblclick="return dblclicked(this)">Creating customized mailings</span></a>
+<ul id="ul3.2.9" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading4" id="i3.2.9.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a3.2.9.1" href="inserting_agnitas-tags.htm" target="hmcontent"><span class="heading4" id="s3.2.9.1">Inserting AGNITAS-Tags</span></a>
+</li>
+<li class="heading4" id="i3.2.9.2" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a3.2.9.2" href="form_of_address_-_individual_g.htm" target="hmcontent"><span class="heading4" id="s3.2.9.2">Form of address - Individual greetings</span></a>
+</li>
+<li class="heading4" id="i3.2.9.3" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a3.2.9.3" href="overview_of_agnitas-tags.htm" target="hmcontent"><span class="heading4" id="s3.2.9.3">Overview of AGNITAS-Tags</span></a>
+</li>
+</ul>
+</li>
+<li class="heading3" id="i3.2.10" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a3.2.10" href="dynamic_content_generation.htm" target="hmcontent"><span class="heading3" id="s3.2.10">Dynamic content generation</span></a>
+</li>
+<li class="heading3" id="i3.2.11" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading3" id="a3.2.11" href="testing_and_sending_a_mailing.htm" target="hmcontent"><span class="heading3" id="s3.2.11" ondblclick="return dblclicked(this)">Testing and sending a mailing</span></a>
+<ul id="ul3.2.11" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading4" id="i3.2.11.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a3.2.11.1" href="preview_-_for_in-depth_checkin.htm" target="hmcontent"><span class="heading4" id="s3.2.11.1">Preview - For in-depth checking</span></a>
+</li>
+<li class="heading4" id="i3.2.11.2" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a3.2.11.2" href="sending_out_test_mails.htm" target="hmcontent"><span class="heading4" id="s3.2.11.2">Sending out test mails</span></a>
+</li>
+<li class="heading4" id="i3.2.11.3" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a3.2.11.3" href="send_mailing.htm" target="hmcontent"><span class="heading4" id="s3.2.11.3">Send mailing</span></a>
+</li>
+</ul>
+</li>
+<li class="heading3" id="i3.2.12" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a3.2.12" href="fullview_always_display_html_m.htm" target="hmcontent"><span class="heading3" id="s3.2.12">Fullview: Always display HTML mails correctly</span></a>
+</li>
+<li class="heading3" id="i3.2.13" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a3.2.13" href="automatic_date-based_mailing_-.htm" target="hmcontent"><span class="heading3" id="s3.2.13">Automatic date-based mailings - an example</span></a>
+</li>
+</ul>
+</li>
+<li class="heading2" id="i3.3" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading2" id="a3.3" href="templates_-_re-usable_text_mod.htm" target="hmcontent"><span class="heading2" id="s3.3" ondblclick="return dblclicked(this)">Templates - Re-usable text modules</span></a>
+<ul id="ul3.3" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading3" id="i3.3.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a3.3.1" href="what_are_templates_.htm" target="hmcontent"><span class="heading3" id="s3.3.1">What are templates?</span></a>
+</li>
+<li class="heading3" id="i3.3.2" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading3" id="a3.3.2" href="creating_a_new_template.htm" target="hmcontent"><span class="heading3" id="s3.3.2" ondblclick="return dblclicked(this)">Creating a new template</span></a>
+<ul id="ul3.3.2" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading4" id="i3.3.2.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a3.3.2.1" href="entering_basic_template_data.htm" target="hmcontent"><span class="heading4" id="s3.3.2.1">Entering basic template data</span></a>
+</li>
+<li class="heading4" id="i3.3.2.2" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a3.3.2.2" href="entering_further_template_data.htm" target="hmcontent"><span class="heading4" id="s3.3.2.2">Entering further template data</span></a>
+</li>
+<li class="heading4" id="i3.3.2.3" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a3.3.2.3" href="saving_and_copying_templates.htm" target="hmcontent"><span class="heading4" id="s3.3.2.3">Saving and copying templates</span></a>
+</li>
+<li class="heading4" id="i3.3.2.4" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a3.3.2.4" href="further_details_for_creating_t.htm" target="hmcontent"><span class="heading4" id="s3.3.2.4">Further details for creating templates</span></a>
+</li>
+<li class="heading4" id="i3.3.2.5" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a3.3.2.5" href="deleting_a_template.htm" target="hmcontent"><span class="heading4" id="s3.3.2.5">Deleting a template</span></a>
+</li>
+</ul>
+</li>
+<li class="heading3" id="i3.3.3" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading3" id="a3.3.3" href="using_text_modules.htm" target="hmcontent"><span class="heading3" id="s3.3.3" ondblclick="return dblclicked(this)">Using text modules</span></a>
+<ul id="ul3.3.3" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading4" id="i3.3.3.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a3.3.3.1" href="inserting_a_text_module_using_.htm" target="hmcontent"><span class="heading4" id="s3.3.3.1">Inserting a text module using AGNITAS-Tags</span></a>
+</li>
+<li class="heading4" id="i3.3.3.2" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a3.3.3.2" href="dynamic_text_module.htm" target="hmcontent"><span class="heading4" id="s3.3.3.2">Dynamic text module</span></a>
+</li>
+</ul>
+</li>
+<li class="heading3" id="i3.3.4" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a3.3.4" href="using_templates.htm" target="hmcontent"><span class="heading3" id="s3.3.4">Using templates</span></a>
+</li>
+</ul>
+</li>
+<li class="heading2" id="i3.4" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading2" id="a3.4" href="archives_-_grouping_mailings.htm" target="hmcontent"><span class="heading2" id="s3.4" ondblclick="return dblclicked(this)">Archives - Grouping mailings</span></a>
+<ul id="ul3.4" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading3" id="i3.4.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a3.4.1" href="what_are_archives_.htm" target="hmcontent"><span class="heading3" id="s3.4.1">What are archives?</span></a>
+</li>
+<li class="heading3" id="i3.4.2" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading3" id="a3.4.2" href="managing_archives.htm" target="hmcontent"><span class="heading3" id="s3.4.2" ondblclick="return dblclicked(this)">Managing archives</span></a>
+<ul id="ul3.4.2" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading4" id="i3.4.2.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a3.4.2.1" href="create_a_new_archive.htm" target="hmcontent"><span class="heading4" id="s3.4.2.1">Create a new archive</span></a>
+</li>
+<li class="heading4" id="i3.4.2.2" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a3.4.2.2" href="display_and_amend_details.htm" target="hmcontent"><span class="heading4" id="s3.4.2.2">Display and amend details</span></a>
+</li>
+<li class="heading4" id="i3.4.2.3" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a3.4.2.3" href="deleting_an_archive.htm" target="hmcontent"><span class="heading4" id="s3.4.2.3">Deleting an archive</span></a>
+</li>
+</ul>
+</li>
+<li class="heading3" id="i3.4.3" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading3" id="a3.4.3" href="assign_mailing_to_a_archive.htm" target="hmcontent"><span class="heading3" id="s3.4.3" ondblclick="return dblclicked(this)">Assign mailing to a archive</span></a>
+<ul id="ul3.4.3" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading4" id="i3.4.3.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a3.4.3.1" href="assign_existing_mailing.htm" target="hmcontent"><span class="heading4" id="s3.4.3.1">Assign existing mailing</span></a>
+</li>
+<li class="heading4" id="i3.4.3.2" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a3.4.3.2" href="assign_new_mailing.htm" target="hmcontent"><span class="heading4" id="s3.4.3.2">Assign new mailing</span></a>
+</li>
+</ul>
+</li>
+<li class="heading3" id="i3.4.4" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a3.4.4" href="statistical_evaluation.htm" target="hmcontent"><span class="heading3" id="s3.4.4">Statistical evaluation</span></a>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="heading1" id="i4" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading1" id="a4" href="recipients_-_managing_customer.htm" target="hmcontent"><span class="heading1" id="s4" ondblclick="return dblclicked(this)">Recipients - Managing customer data</span></a>
+<ul id="ul4" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading2" id="i4.1" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading2" id="a4.1" href="more_than_just_e-mail_addresse.htm" target="hmcontent"><span class="heading2" id="s4.1" ondblclick="return dblclicked(this)">More than just e-mail addresses</span></a>
+<ul id="ul4.1" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading3" id="i4.1.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a4.1.1" href="user-defined_fields.htm" target="hmcontent"><span class="heading3" id="s4.1.1">User-defined fields</span></a>
+</li>
+<li class="heading3" id="i4.1.2" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a4.1.2" href="how_do_recipients_get_into_you.htm" target="hmcontent"><span class="heading3" id="s4.1.2">How do recipients get into your database?</span></a>
+</li>
+</ul>
+</li>
+<li class="heading2" id="i4.2" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading2" id="a4.2" href="managing_recipients.htm" target="hmcontent"><span class="heading2" id="s4.2" ondblclick="return dblclicked(this)">Managing recipients</span></a>
+<ul id="ul4.2" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading3" id="i4.2.1" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading3" id="a4.2.1" href="show_recipient_profile.htm" target="hmcontent"><span class="heading3" id="s4.2.1" ondblclick="return dblclicked(this)">Show recipient profile</span></a>
+<ul id="ul4.2.1" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading4" id="i4.2.1.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a4.2.1.1" href="general_information.htm" target="hmcontent"><span class="heading4" id="s4.2.1.1">General information</span></a>
+</li>
+<li class="heading4" id="i4.2.1.2" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a4.2.1.2" href="other_profile_data.htm" target="hmcontent"><span class="heading4" id="s4.2.1.2">Other profile data</span></a>
+</li>
+<li class="heading4" id="i4.2.1.3" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a4.2.1.3" href="mailing_lists_and_recipient_ty.htm" target="hmcontent"><span class="heading4" id="s4.2.1.3">Mailing lists and recipient types</span></a>
+</li>
+</ul>
+</li>
+<li class="heading3" id="i4.2.2" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a4.2.2" href="edit_recipient_profile.htm" target="hmcontent"><span class="heading3" id="s4.2.2">Edit recipient profile</span></a>
+</li>
+<li class="heading3" id="i4.2.3" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a4.2.3" href="create_new_recipients.htm" target="hmcontent"><span class="heading3" id="s4.2.3">Create new recipients</span></a>
+</li>
+<li class="heading3" id="i4.2.4" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a4.2.4" href="creating_administrators_and_te.htm" target="hmcontent"><span class="heading3" id="s4.2.4">Creating administrators and test distribution lists</span></a>
+</li>
+<li class="heading3" id="i4.2.5" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a4.2.5" href="deleting_a_recipient.htm" target="hmcontent"><span class="heading3" id="s4.2.5">Deleting a recipient</span></a>
+</li>
+</ul>
+</li>
+<li class="heading2" id="i4.3" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading2" id="a4.3" href="searching_for_recipients.htm" target="hmcontent"><span class="heading2" id="s4.3" ondblclick="return dblclicked(this)">Searching for recipients</span></a>
+<ul id="ul4.3" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading3" id="i4.3.1" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading3" id="a4.3.1" href="searching_for_fields.htm" target="hmcontent"><span class="heading3" id="s4.3.1" ondblclick="return dblclicked(this)">Searching for fields</span></a>
+<ul id="ul4.3.1" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading4" id="i4.3.1.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a4.3.1.1" href="field_drop-down_list.htm" target="hmcontent"><span class="heading4" id="s4.3.1.1">Field drop-down list</span></a>
+</li>
+<li class="heading4" id="i4.3.1.2" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a4.3.1.2" href="drop-down_list_for_relational_.htm" target="hmcontent"><span class="heading4" id="s4.3.1.2">Drop-down list for relational operators</span></a>
+</li>
+<li class="heading4" id="i4.3.1.3" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a4.3.1.3" href="combining_search_rules.htm" target="hmcontent"><span class="heading4" id="s4.3.1.3">Combining search rules</span></a>
+</li>
+</ul>
+</li>
+<li class="heading3" id="i4.3.2" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a4.3.2" href="searching_for_mailing_lists.htm" target="hmcontent"><span class="heading3" id="s4.3.2">Searching for mailing lists</span></a>
+</li>
+<li class="heading3" id="i4.3.3" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a4.3.3" href="search_by_target-group.htm" target="hmcontent"><span class="heading3" id="s4.3.3">Search by target-group</span></a>
+</li>
+<li class="heading3" id="i4.3.4" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a4.3.4" href="search_by_recipient_type.htm" target="hmcontent"><span class="heading3" id="s4.3.4">Search by recipient type</span></a>
+</li>
+<li class="heading3" id="i4.3.5" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a4.3.5" href="search_by_recipient_status.htm" target="hmcontent"><span class="heading3" id="s4.3.5">Search by recipient status</span></a>
+</li>
+</ul>
+</li>
+<li class="heading2" id="i4.4" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading2" id="a4.4" href="import_function_for_recipient_.htm" target="hmcontent"><span class="heading2" id="s4.4" ondblclick="return dblclicked(this)">Import function for recipient data</span></a>
+<ul id="ul4.4" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading3" id="i4.4.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a4.4.1" href="import_dialog_structure.htm" target="hmcontent"><span class="heading3" id="s4.4.1">Import dialog structure</span></a>
+</li>
+<li class="heading3" id="i4.4.2" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading3" id="a4.4.2" href="creating_a_new_import_profile.htm" target="hmcontent"><span class="heading3" id="s4.4.2" ondblclick="return dblclicked(this)">Creating a new import profile</span></a>
+<ul id="ul4.4.2" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading4" id="i4.4.2.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a4.4.2.1" href="determining_the_csv-file_setti.htm" target="hmcontent"><span class="heading4" id="s4.4.2.1">Determining the CSV-file settings</span></a>
+</li>
+<li class="heading4" id="i4.4.2.2" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a4.4.2.2" href="determining_the_process_settin.htm" target="hmcontent"><span class="heading4" id="s4.4.2.2">Determining the process settings</span></a>
+</li>
+<li class="heading4" id="i4.4.2.3" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a4.4.2.3" href="handling_with_duplicates.htm" target="hmcontent"><span class="heading4" id="s4.4.2.3">Handling with duplicates</span></a>
+</li>
+<li class="heading4" id="i4.4.2.4" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a4.4.2.4" href="settings_for_e-mail_and_gender.htm" target="hmcontent"><span class="heading4" id="s4.4.2.4">Settings for e-mail and gender</span></a>
+</li>
+<li class="heading4" id="i4.4.2.5" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a4.4.2.5" href="managing_fields.htm" target="hmcontent"><span class="heading4" id="s4.4.2.5">Manage columns</span></a>
+</li>
+</ul>
+</li>
+<li class="heading3" id="i4.4.3" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a4.4.3" href="managing_a_profile__deleting_a.htm" target="hmcontent"><span class="heading3" id="s4.4.3">Managing a profile, deleting a profile</span></a>
+</li>
+<li class="heading3" id="i4.4.4" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading3" id="a4.4.4" href="the_import_assistant.htm" target="hmcontent"><span class="heading3" id="s4.4.4" ondblclick="return dblclicked(this)">The import assistant</span></a>
+<ul id="ul4.4.4" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading4" id="i4.4.4.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a4.4.4.1" href="assigning_the_csv_columns_to_t.htm" target="hmcontent"><span class="heading4" id="s4.4.4.1">Assigning the CSV columns to the database columns</span></a>
+</li>
+<li class="heading4" id="i4.4.4.2" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a4.4.4.2" href="selection_of_mailing_lists.htm" target="hmcontent"><span class="heading4" id="s4.4.4.2">Selection of mailing lists</span></a>
+</li>
+<li class="heading4" id="i4.4.4.3" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a4.4.4.3" href="errorhandling.htm" target="hmcontent"><span class="heading4" id="s4.4.4.3">Error handling</span></a>
+</li>
+<li class="heading4" id="i4.4.4.4" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a4.4.4.4" href="importing_the_csv-file.htm" target="hmcontent"><span class="heading4" id="s4.4.4.4">Importing the CSV-file</span></a>
+</li>
+</ul>
+</li>
+<li class="heading3" id="i4.4.5" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a4.4.5" href="auto-import.htm" target="hmcontent"><span class="heading3" id="s4.4.5">Auto-Import</span></a>
+</li>
+<li class="heading3" id="i4.4.6" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a4.4.6" href="creating_a_csv-file.htm" target="hmcontent"><span class="heading3" id="s4.4.6">Creating a CSV-file</span></a>
+</li>
+</ul>
+</li>
+<li class="heading2" id="i4.5" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading2" id="a4.5" href="export_function_for_recipient_.htm" target="hmcontent"><span class="heading2" id="s4.5" ondblclick="return dblclicked(this)">Export function for recipient data</span></a>
+<ul id="ul4.5" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading3" id="i4.5.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a4.5.1" href="auto-export.htm" target="hmcontent"><span class="heading3" id="s4.5.1">Auto-Export</span></a>
+</li>
+</ul>
+</li>
+<li class="heading2" id="i4.6" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading2" id="a4.6" href="blacklist_-_do_not_mail.htm" target="hmcontent"><span class="heading2" id="s4.6">Blacklist - Do not mail</span></a>
+</li>
+<li class="heading2" id="i4.7" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading2" id="a4.7" href="types_of_address.htm" target="hmcontent"><span class="heading2" id="s4.7">Forms of salutation</span></a>
+</li>
+</ul>
+</li>
+<li class="heading1" id="i5" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading1" id="a5" href="statistics_-_to_gain_a_broad_v.htm" target="hmcontent"><span class="heading1" id="s5" ondblclick="return dblclicked(this)">Statistics - To gain a broad view</span></a>
+<ul id="ul5" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading2" id="i5.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading2" id="a5.1" href="what_are_the_available_statist.htm" target="hmcontent"><span class="heading2" id="s5.1">What are the available statistical functions?</span></a>
+</li>
+<li class="heading2" id="i5.2" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading2" id="a5.2" href="mailing_statistics_openemm.htm" target="hmcontent"><span class="heading2" id="s5.2" ondblclick="return dblclicked(this)">Mailing statistics</span></a>
+<ul id="ul5.2" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading3" id="i5.2.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a5.2.1" href="heatmap_openemm.htm" target="hmcontent"><span class="heading3" id="s5.2.1">Heatmap</span></a>
+</li>
+<li class="heading3" id="i5.2.2" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a5.2.2" href="comparing_target_groups_openemm.htm" target="hmcontent"><span class="heading3" id="s5.2.2">Comparing target groups</span></a>
+</li>
+<li class="heading3" id="i5.2.3" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a5.2.3" href="feedback_analysis_openemm.htm" target="hmcontent"><span class="heading3" id="s5.2.3">Feedback analysis</span></a>
+</li>
+</ul>
+</li>
+<li class="heading2" id="i5.3" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading2" id="a5.3" href="comparing_mailings2.htm" target="hmcontent"><span class="heading2" id="s5.3">Comparing mailings</span></a>
+</li>
+<li class="heading2" id="i5.4" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading2" id="a5.4" href="domain_statistics.htm" target="hmcontent"><span class="heading2" id="s5.4">Domain statistics</span></a>
+</li>
+<li class="heading2" id="i5.5" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading2" id="a5.5" href="ip_statistics.htm" target="hmcontent"><span class="heading2" id="s5.5">IP overview</span></a>
+</li>
+<li class="heading2" id="i5.6" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading2" id="a5.6" href="recipient_statistics_openemm.htm" target="hmcontent"><span class="heading2" id="s5.6" ondblclick="return dblclicked(this)">Recipient statistics</span></a>
+<ul id="ul5.6" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading3" id="i5.6.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a5.6.1" href="detailed_recipient_statistics_openemm.htm" target="hmcontent"><span class="heading3" id="s5.6.1">Detailed recipient statistics</span></a>
+</li>
+</ul>
+</li>
+<li class="heading2" id="i5.7" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading2" id="a5.7" href="exporting_statistical_data.htm" target="hmcontent"><span class="heading2" id="s5.7">Exporting statistical data</span></a>
+</li>
+</ul>
+</li>
+<li class="heading1" id="i6" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading1" id="a6" href="target_groups_-_dynamic_filter.htm" target="hmcontent"><span class="heading1" id="s6" ondblclick="return dblclicked(this)">Target groups - Dynamic filters</span></a>
+<ul id="ul6" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading2" id="i6.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading2" id="a6.1" href="what_is_a_traget_group_.htm" target="hmcontent"><span class="heading2" id="s6.1">What is a traget group?</span></a>
+</li>
+<li class="heading2" id="i6.2" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading2" id="a6.2" href="creating_and_managing_target_g.htm" target="hmcontent"><span class="heading2" id="s6.2">Creating and managing target groups</span></a>
+</li>
+<li class="heading2" id="i6.3" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading2" id="a6.3" href="search_rule_setup.htm" target="hmcontent"><span class="heading2" id="s6.3" ondblclick="return dblclicked(this)">Search rule setup</span></a>
+<ul id="ul6.3" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading3" id="i6.3.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a6.3.1" href="list_split_using_mod.htm" target="hmcontent"><span class="heading3" id="s6.3.1">List split using MOD</span></a>
+</li>
+<li class="heading3" id="i6.3.2" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a6.3.2" href="is_and_null_or_not_null.htm" target="hmcontent"><span class="heading3" id="s6.3.2">IS and NULL or NOT NULL</span></a>
+</li>
+<li class="heading3" id="i6.3.3" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a6.3.3" href="date_functions.htm" target="hmcontent"><span class="heading3" id="s6.3.3">Date functions</span></a>
+</li>
+</ul>
+</li>
+<li class="heading2" id="i6.4" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading2" id="a6.4" href="combined_search_rules_with_bra.htm" target="hmcontent"><span class="heading2" id="s6.4">Combined search rules with brackets</span></a>
+</li>
+<li class="heading2" id="i6.5" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading2" id="a6.5" href="create_a_mailing_list_from_a_t.htm" target="hmcontent"><span class="heading2" id="s6.5">Create a mailing list from a target group or delete recipients</span></a>
+</li>
+<li class="heading2" id="i6.6" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading2" id="a6.6" href="copying_of_target_groups.htm" target="hmcontent"><span class="heading2" id="s6.6">Copying of target groups</span></a>
+</li>
+</ul>
+</li>
+<li class="heading1" id="i7" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading1" id="a7" href="mailing_lists_-_managing_list_.htm" target="hmcontent"><span class="heading1" id="s7" ondblclick="return dblclicked(this)">Mailing lists - Managing list subscription</span></a>
+<ul id="ul7" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading2" id="i7.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading2" id="a7.1" href="what_is_a_mailing_list_.htm" target="hmcontent"><span class="heading2" id="s7.1">What is a mailing list?</span></a>
+</li>
+<li class="heading2" id="i7.2" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading2" id="a7.2" href="creating_a_mailing_list.htm" target="hmcontent"><span class="heading2" id="s7.2">Creating a mailing list</span></a>
+</li>
+<li class="heading2" id="i7.3" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading2" id="a7.3" href="modifying_a_mailing_list.htm" target="hmcontent"><span class="heading2" id="s7.3">Modifying a mailing list</span></a>
+</li>
+<li class="heading2" id="i7.4" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading2" id="a7.4" href="deleting_a_mailing_list.htm" target="hmcontent"><span class="heading2" id="s7.4">Deleting a mailing list</span></a>
+</li>
+</ul>
+</li>
+<li class="heading1" id="i8" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading1" id="a8" href="sites__actions.htm" target="hmcontent"><span class="heading1" id="s8" ondblclick="return dblclicked(this)">Forms &amp; Actions</span></a>
+<ul id="ul8" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading2" id="i8.1" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading2" id="a8.1" href="forms_-_recipient_management.htm" target="hmcontent"><span class="heading2" id="s8.1" ondblclick="return dblclicked(this)">Forms - Recipient management</span></a>
+<ul id="ul8.1" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading3" id="i8.1.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a8.1.1" href="what_is_a_form_.htm" target="hmcontent"><span class="heading3" id="s8.1.1">What is a form?</span></a>
+</li>
+<li class="heading3" id="i8.1.2" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading3" id="a8.1.2" href="forms.htm" target="hmcontent"><span class="heading3" id="s8.1.2" ondblclick="return dblclicked(this)">Forms</span></a>
+<ul id="ul8.1.2" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading4" id="i8.1.2.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a8.1.2.1" href="this_is_how_forms_work.htm" target="hmcontent"><span class="heading4" id="s8.1.2.1">This is how forms work</span></a>
+</li>
+<li class="heading4" id="i8.1.2.2" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a8.1.2.2" href="managing_forms.htm" target="hmcontent"><span class="heading4" id="s8.1.2.2">Managing forms</span></a>
+</li>
+<li class="heading4" id="i8.1.2.3" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading4" id="a8.1.2.3" href="example_form_for_a_user_profil.htm" target="hmcontent"><span class="heading4" id="s8.1.2.3" ondblclick="return dblclicked(this)">Example form: Amend a profile</span></a>
+<ul id="ul8.1.2.3" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading5" id="i8.1.2.3.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading5" id="a8.1.2.3.1" href="creating_a_new_action.htm" target="hmcontent"><span class="heading5" id="s8.1.2.3.1">Creating a new action</span></a>
+</li>
+<li class="heading5" id="i8.1.2.3.2" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading5" id="a8.1.2.3.2" href="creating_a_form_to_display_dat.htm" target="hmcontent"><span class="heading5" id="s8.1.2.3.2">Creating a form to display data</span></a>
+</li>
+<li class="heading5" id="i8.1.2.3.3" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading5" id="a8.1.2.3.3" href="creating_a_form_to_save_data.htm" target="hmcontent"><span class="heading5" id="s8.1.2.3.3">Creating a form to save data</span></a>
+</li>
+<li class="heading5" id="i8.1.2.3.4" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading5" id="a8.1.2.3.4" href="calling_up_a_form.htm" target="hmcontent"><span class="heading5" id="s8.1.2.3.4">Calling up a form</span></a>
+</li>
+</ul>
+</li>
+<li class="heading4" id="i8.1.2.4" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading4" id="a8.1.2.4" href="example_opt-in_form.htm" target="hmcontent"><span class="heading4" id="s8.1.2.4" ondblclick="return dblclicked(this)">Example form: Opt-in</span></a>
+<ul id="ul8.1.2.4" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading5" id="i8.1.2.4.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading5" id="a8.1.2.4.1" href="creating_a_new_action2.htm" target="hmcontent"><span class="heading5" id="s8.1.2.4.1">Creating a new action</span></a>
+</li>
+<li class="heading5" id="i8.1.2.4.2" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading5" id="a8.1.2.4.2" href="creating_a_form_to_enter_data.htm" target="hmcontent"><span class="heading5" id="s8.1.2.4.2">Creating a form to enter data</span></a>
+</li>
+<li class="heading5" id="i8.1.2.4.3" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading5" id="a8.1.2.4.3" href="creating_a_form_to_save_data2.htm" target="hmcontent"><span class="heading5" id="s8.1.2.4.3">Creating a form to save data</span></a>
+</li>
+<li class="heading5" id="i8.1.2.4.4" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading5" id="a8.1.2.4.4" href="calling_up_the_registration_fo.htm" target="hmcontent"><span class="heading5" id="s8.1.2.4.4">Calling up the registration form</span></a>
+</li>
+</ul>
+</li>
+<li class="heading4" id="i8.1.2.5" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading4" id="a8.1.2.5" href="example_subscribing_with_doubl.htm" target="hmcontent"><span class="heading4" id="s8.1.2.5" ondblclick="return dblclicked(this)">Example form: Subscribing with double opt-in</span></a>
+<ul id="ul8.1.2.5" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading5" id="i8.1.2.5.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading5" id="a8.1.2.5.1" href="create_an_action-based_mailing.htm" target="hmcontent"><span class="heading5" id="s8.1.2.5.1">Create an action-based mailing</span></a>
+</li>
+<li class="heading5" id="i8.1.2.5.2" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading5" id="a8.1.2.5.2" href="creating_new_actions.htm" target="hmcontent"><span class="heading5" id="s8.1.2.5.2">Creating new actions</span></a>
+</li>
+<li class="heading5" id="i8.1.2.5.3" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading5" id="a8.1.2.5.3" href="creating_new_forms.htm" target="hmcontent"><span class="heading5" id="s8.1.2.5.3">Creating new forms</span></a>
+</li>
+<li class="heading5" id="i8.1.2.5.4" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading5" id="a8.1.2.5.4" href="calling_up_the_registration_f2.htm" target="hmcontent"><span class="heading5" id="s8.1.2.5.4">Calling up the registration form</span></a>
+</li>
+</ul>
+</li>
+<li class="heading4" id="i8.1.2.6" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a8.1.2.6" href="sending_the_last_newsletter_ju.htm" target="hmcontent"><span class="heading4" id="s8.1.2.6">Sending the last newsletter just after subscription</span></a>
+</li>
+<li class="heading4" id="i8.1.2.7" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading4" id="a8.1.2.7" href="example_form_for_unsubscribing.htm" target="hmcontent"><span class="heading4" id="s8.1.2.7" ondblclick="return dblclicked(this)">Example form: Unsubscribe</span></a>
+<ul id="ul8.1.2.7" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading5" id="i8.1.2.7.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading5" id="a8.1.2.7.1" href="creating_a_new_action3.htm" target="hmcontent"><span class="heading5" id="s8.1.2.7.1">Creating a new action</span></a>
+</li>
+<li class="heading5" id="i8.1.2.7.2" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading5" id="a8.1.2.7.2" href="creating_new_forms2.htm" target="hmcontent"><span class="heading5" id="s8.1.2.7.2">Creating new forms</span></a>
+</li>
+<li class="heading5" id="i8.1.2.7.3" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading5" id="a8.1.2.7.3" href="calling_up_the_unsubscribe_for.htm" target="hmcontent"><span class="heading5" id="s8.1.2.7.3">Calling up the unsubscribe form</span></a>
+</li>
+</ul>
+</li>
+<li class="heading4" id="i8.1.2.8" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading4" id="a8.1.2.8" href="advanced_form_layout.htm" target="hmcontent"><span class="heading4" id="s8.1.2.8" ondblclick="return dblclicked(this)">Advanced form layout</span></a>
+<ul id="ul8.1.2.8" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading5" id="i8.1.2.8.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading5" id="a8.1.2.8.1" href="drop-down_list_instead_of_entr.htm" target="hmcontent"><span class="heading5" id="s8.1.2.8.1">Drop-down list instead of entry field</span></a>
+</li>
+<li class="heading5" id="i8.1.2.8.2" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading5" id="a8.1.2.8.2" href="creating_a_html_form_dynamical.htm" target="hmcontent"><span class="heading5" id="s8.1.2.8.2">Creating a HTML form dynamically</span></a>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="heading2" id="i8.2" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading2" id="a8.2" href="maintain_recipients_profile_wi.htm" target="hmcontent"><span class="heading2" id="s8.2" ondblclick="return dblclicked(this)">Maintain recipient's profile with actions</span></a>
+<ul id="ul8.2" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading3" id="i8.2.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a8.2.1" href="what_are_the_special_features_.htm" target="hmcontent"><span class="heading3" id="s8.2.1">What are the special features of the OpenEMM?</span></a>
+</li>
+<li class="heading3" id="i8.2.2" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading3" id="a8.2.2" href="extending_recipients_profiles.htm" target="hmcontent"><span class="heading3" id="s8.2.2" ondblclick="return dblclicked(this)">Extending recipient's profiles</span></a>
+<ul id="ul8.2.2" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading4" id="i8.2.2.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a8.2.2.1" href="planning_fields_properly.htm" target="hmcontent"><span class="heading4" id="s8.2.2.1">Planning fields properly</span></a>
+</li>
+<li class="heading4" id="i8.2.2.2" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a8.2.2.2" href="creating_new_fields.htm" target="hmcontent"><span class="heading4" id="s8.2.2.2">Creating new fields</span></a>
+</li>
+<li class="heading4" id="i8.2.2.3" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a8.2.2.3" href="deleting_existing_fields.htm" target="hmcontent"><span class="heading4" id="s8.2.2.3">Deleting existing fields</span></a>
+</li>
+</ul>
+</li>
+<li class="heading3" id="i8.2.3" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading3" id="a8.2.3" href="defining_actions.htm" target="hmcontent"><span class="heading3" id="s8.2.3" ondblclick="return dblclicked(this)">Defining actions</span></a>
+<ul id="ul8.2.3" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading4" id="i8.2.3.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a8.2.3.1" href="managing_actions.htm" target="hmcontent"><span class="heading4" id="s8.2.3.1">Managing actions</span></a>
+</li>
+<li class="heading4" id="i8.2.3.2" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a8.2.3.2" href="action_changing_recipient_prof.htm" target="hmcontent"><span class="heading4" id="s8.2.3.2">Action: Changing recipient profile</span></a>
+</li>
+<li class="heading4" id="i8.2.3.3" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a8.2.3.3" href="action_triggering_an_action-ba.htm" target="hmcontent"><span class="heading4" id="s8.2.3.3">Action: Triggering an action-based mailing</span></a>
+</li>
+<li class="heading4" id="i8.2.3.4" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a8.2.3.4" href="action_including_a_script_in_a.htm" target="hmcontent"><span class="heading4" id="s8.2.3.4">Action: Including a script in an action</span></a>
+</li>
+</ul>
+</li>
+<li class="heading3" id="i8.2.4" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a8.2.4" href="linking_actions_and_trackable_.htm" target="hmcontent"><span class="heading3" id="s8.2.4">Linking actions and trackable links</span></a>
+</li>
+</ul>
+</li>
+<li class="heading2" id="i8.3" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading2" id="a8.3" href="closed-loop_marketing_-_an_exa.htm" target="hmcontent"><span class="heading2" id="s8.3" ondblclick="return dblclicked(this)">Closed-loop marketing</span></a>
+<ul id="ul8.3" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading3" id="i8.3.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a8.3.1" href="editing_recipient_profile.htm" target="hmcontent"><span class="heading3" id="s8.3.1">Editing recipient profile</span></a>
+</li>
+<li class="heading3" id="i8.3.2" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a8.3.2" href="defining_actions2.htm" target="hmcontent"><span class="heading3" id="s8.3.2">Defining actions</span></a>
+</li>
+<li class="heading3" id="i8.3.3" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a8.3.3" href="connecting_links_to_actions.htm" target="hmcontent"><span class="heading3" id="s8.3.3">Connecting links to actions</span></a>
+</li>
+</ul>
+</li>
+<li class="heading2" id="i8.4" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading2" id="a8.4" href="automatic_mailing_-_an_example.htm" target="hmcontent"><span class="heading2" id="s8.4" ondblclick="return dblclicked(this)">Automatic mailing - An example</span></a>
+<ul id="ul8.4" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading3" id="i8.4.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a8.4.1" href="creating_a_follow-up_mailing.htm" target="hmcontent"><span class="heading3" id="s8.4.1">Creating a follow-up mailing</span></a>
+</li>
+<li class="heading3" id="i8.4.2" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a8.4.2" href="defining_actions3.htm" target="hmcontent"><span class="heading3" id="s8.4.2">Defining actions</span></a>
+</li>
+<li class="heading3" id="i8.4.3" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a8.4.3" href="creating_a_basic_mailing.htm" target="hmcontent"><span class="heading3" id="s8.4.3">Creating a basic mailing</span></a>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="heading1" id="i9" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading1" id="a9" href="content_manager.htm" target="hmcontent"><span class="heading1" id="s9" ondblclick="return dblclicked(this)">Content Manager</span></a>
+<ul id="ul9" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading2" id="i9.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading2" id="a9.1" href="what_is_content_manager_.htm" target="hmcontent"><span class="heading2" id="s9.1">What is Content Manager?</span></a>
+</li>
+<li class="heading2" id="i9.2" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading2" id="a9.2" href="module_types.htm" target="hmcontent"><span class="heading2" id="s9.2" ondblclick="return dblclicked(this)">Module types</span></a>
+<ul id="ul9.2" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading3" id="i9.2.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a9.2.1" href="show_available_module_types.htm" target="hmcontent"><span class="heading3" id="s9.2.1">Show available module types</span></a>
+</li>
+<li class="heading3" id="i9.2.2" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a9.2.2" href="create_a_new_module_type.htm" target="hmcontent"><span class="heading3" id="s9.2.2">Create a new module type</span></a>
+</li>
+<li class="heading3" id="i9.2.3" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a9.2.3" href="entering_basic_data.htm" target="hmcontent"><span class="heading3" id="s9.2.3">Entering basic data</span></a>
+</li>
+<li class="heading3" id="i9.2.4" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a9.2.4" href="saving_and_copying_module_type.htm" target="hmcontent"><span class="heading3" id="s9.2.4">Saving and copying module types</span></a>
+</li>
+<li class="heading3" id="i9.2.5" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a9.2.5" href="adding_contents_to_a_module_ty.htm" target="hmcontent"><span class="heading3" id="s9.2.5">Adding contents to a module type and saving it as a content module</span></a>
+</li>
+<li class="heading3" id="i9.2.6" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a9.2.6" href="deleting_a_module_type.htm" target="hmcontent"><span class="heading3" id="s9.2.6">Deleting a module type</span></a>
+</li>
+</ul>
+</li>
+<li class="heading2" id="i9.3" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading2" id="a9.3" href="content_modules.htm" target="hmcontent"><span class="heading2" id="s9.3" ondblclick="return dblclicked(this)">Content modules</span></a>
+<ul id="ul9.3" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading3" id="i9.3.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a9.3.1" href="show_available_content_modules.htm" target="hmcontent"><span class="heading3" id="s9.3.1">Show available content modules</span></a>
+</li>
+<li class="heading3" id="i9.3.2" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a9.3.2" href="creating_a_new_content_module.htm" target="hmcontent"><span class="heading3" id="s9.3.2">Creating a new content module</span></a>
+</li>
+<li class="heading3" id="i9.3.3" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a9.3.3" href="entering_basic_data2.htm" target="hmcontent"><span class="heading3" id="s9.3.3">Entering basic data</span></a>
+</li>
+<li class="heading3" id="i9.3.4" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a9.3.4" href="saving_a_content_moduke_and_as.htm" target="hmcontent"><span class="heading3" id="s9.3.4">Saving a content module and assigning it to a mailing, copyin a content module</span></a>
+</li>
+<li class="heading3" id="i9.3.5" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a9.3.5" href="deleting_a_content_module.htm" target="hmcontent"><span class="heading3" id="s9.3.5">Deleting a content module</span></a>
+</li>
+<li class="heading3" id="i9.3.6" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading3" id="a9.3.6" href="cm_categories.htm" target="hmcontent"><span class="heading3" id="s9.3.6" ondblclick="return dblclicked(this)">CM categories</span></a>
+<ul id="ul9.3.6" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading4" id="i9.3.6.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a9.3.6.1" href="create_a_new_cm_category.htm" target="hmcontent"><span class="heading4" id="s9.3.6.1">Create a new CM category</span></a>
+</li>
+<li class="heading4" id="i9.3.6.2" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a9.3.6.2" href="assigning_a_content_module_to_.htm" target="hmcontent"><span class="heading4" id="s9.3.6.2">Assigning a content module to a CM category</span></a>
+</li>
+<li class="heading4" id="i9.3.6.3" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading4" id="a9.3.6.3" href="deleting_a_cm_category.htm" target="hmcontent"><span class="heading4" id="s9.3.6.3">Deleting a CM category</span></a>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="heading2" id="i9.4" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading2" id="a9.4" href="cm_templates.htm" target="hmcontent"><span class="heading2" id="s9.4" ondblclick="return dblclicked(this)">CM templates</span></a>
+<ul id="ul9.4" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading3" id="i9.4.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a9.4.1" href="show_available_cm_templates.htm" target="hmcontent"><span class="heading3" id="s9.4.1">Show available CM templates</span></a>
+</li>
+<li class="heading3" id="i9.4.2" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a9.4.2" href="editing_cm_templates.htm" target="hmcontent"><span class="heading3" id="s9.4.2">Editing CM templates</span></a>
+</li>
+<li class="heading3" id="i9.4.3" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a9.4.3" href="uploading_new_cm_templates.htm" target="hmcontent"><span class="heading3" id="s9.4.3">Uploading new CM templates</span></a>
+</li>
+</ul>
+</li>
+<li class="heading2" id="i9.5" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading2" id="a9.5" href="using_cm_templates_in_mailings.htm" target="hmcontent"><span class="heading2" id="s9.5">Using CM templates in mailings</span></a>
+</li>
+</ul>
+</li>
+<li class="heading1" id="i10" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading1" id="a10" href="settings_-_configuring_the_sys.htm" target="hmcontent"><span class="heading1" id="s10" ondblclick="return dblclicked(this)">Administration - Configuring the system</span></a>
+<ul id="ul10" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading2" id="i10.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading2" id="a10.1" href="user_log.htm" target="hmcontent"><span class="heading2" id="s10.1">User log</span></a>
+</li>
+<li class="heading2" id="i10.2" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading2" id="a10.2" href="bounce-filter.htm" target="hmcontent"><span class="heading2" id="s10.2" ondblclick="return dblclicked(this)">Bounce-Filter</span></a>
+<ul id="ul10.2" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading3" id="i10.2.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a10.2.1" href="subscription_via_e-mail.htm" target="hmcontent"><span class="heading3" id="s10.2.1">Subscription via e-mail</span></a>
+</li>
+</ul>
+</li>
+<li class="heading2" id="i10.3" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading2" id="a10.3" href="managing_profile_fields.htm" target="hmcontent"><span class="heading2" id="s10.3">Managing profile fields</span></a>
+</li>
+<li class="heading2" id="i10.4" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading2" id="a10.4" href="users.htm" target="hmcontent"><span class="heading2" id="s10.4" ondblclick="return dblclicked(this)">Users</span></a>
+<ul id="ul10.4" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading3" id="i10.4.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a10.4.1" href="what_are_users_.htm" target="hmcontent"><span class="heading3" id="s10.4.1">What are users?</span></a>
+</li>
+<li class="heading3" id="i10.4.2" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a10.4.2" href="creating_a_new_user_and_changi.htm" target="hmcontent"><span class="heading3" id="s10.4.2">Creating a new user and changing password</span></a>
+</li>
+<li class="heading3" id="i10.4.3" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a10.4.3" href="managing_user.htm" target="hmcontent"><span class="heading3" id="s10.4.3">Managing user</span></a>
+</li>
+<li class="heading3" id="i10.4.4" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a10.4.4" href="assigning_user_rights2.htm" target="hmcontent"><span class="heading3" id="s10.4.4">Assigning user rights</span></a>
+</li>
+</ul>
+</li>
+<li class="heading2" id="i10.5" data-bg="button_closedbook_new.gif;button_openbook_new.gif" style="background:url(button_openbook_new.gif) no-repeat;cursor:pointer;margin-top:2px;margin-left:0;padding-left:12px" onclick="return clicked(this,event)"><a class="heading2" id="a10.5" href="plugin_manager.htm" target="hmcontent"><span class="heading2" id="s10.5" ondblclick="return dblclicked(this)">Plugin Manager (only for license users)</span></a>
+<ul id="ul10.5" style="list-style-type:none;margin-left:-2px;padding:0">
+<li class="heading3" id="i10.5.1" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a10.5.1" href="the_plugins_at_a_glance.htm" target="hmcontent"><span class="heading3" id="s10.5.1">The plugins at a glance</span></a>
+</li>
+<li class="heading3" id="i10.5.2" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a10.5.2" href="installing_and_activating_a_pl.htm" target="hmcontent"><span class="heading3" id="s10.5.2">Installing and activating a plugin</span></a>
+</li>
+<li class="heading3" id="i10.5.3" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading3" id="a10.5.3" href="deactivating_and_uninstalling_.htm" target="hmcontent"><span class="heading3" id="s10.5.3">Deactivating and uninstalling a plugin</span></a>
+</li>
+</ul>
+</li>
+<li class="heading2" id="i10.6" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading2" id="a10.6" href="automatic_update_of_openemm.htm" target="hmcontent"><span class="heading2" id="s10.6">Automatic update of OpenEMM</span></a>
+</li>
+</ul>
+</li>
+<li class="heading1" id="i11" style="background:url(button_topic_new.gif) no-repeat;margin-top:2px;margin-left:0;padding-left:7px" onclick="return clicked(this,event)"><a class="heading1" id="a11" href="appendix_a_agnitas-tags.htm" target="hmcontent"><span class="heading1" id="s11">Appendix A: AGNITAS-Tags</span></a>
+</li>
+</ul>
+<script type="text/javascript">loadicons('button_openbook_new.gif','button_closedbook_new.gif','button_topic_new.gif');</script>
+
+<!-- hr size="1" / -->
+<p style="margin-top: 20px;"><span style="font-size: 8px;">© 2015 AGNITAS AG</span></p>
+</body>
+</html>

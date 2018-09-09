@@ -1,0 +1,160 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+   <title>Empfänger - Kundendaten pflegen &gt; Importfunktion für Empfängerdaten &gt; Auto-Import</title>
+   <meta name="generator" content="Help & Manual">
+   <meta name="keywords" content="">
+   <meta name="description" content="Auto-Import">
+   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+   <!-- This line forces IE8 into IE7 mode, safer until IE8 is better known -->
+   <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7" />
+
+   <link type="text/css" href="default.css" rel="stylesheet">
+   <link type="text/css" href="custom.css" rel="stylesheet">
+   <script type="text/javascript" src="nsh.js"></script>
+
+<script type="text/javascript">   
+// Toggle Toggler 
+
+var toggleCount=false;
+var switchState;
+
+function toggleToggles() {
+
+    if (!toggleCount) {
+     toggleCount = true;
+     HMToggleExpandAll(true);
+     switchState = true;
+     }
+   
+     else if (switchState) {
+        HMToggleExpandAll(false);
+        switchState = false;
+        }
+        
+     else  {
+        HMToggleExpandAll(true);
+        switchState = true;
+        } 
+    }
+</script>
+   
+<!-- non-scrolling headers for CHM and browser-based help, local styles-->
+<style TYPE="text/css" media="screen"> 
+   body {    
+      margin:0; 
+      padding:0; 
+      overflow: auto; 
+      background: #FFFFFF; 
+   } 
+   #idheader { 
+      width:100%; 
+      height:auto; 
+      padding: 0; 
+      margin: 0; 
+} 
+
+   #callout-table, #overview-table {display:block; position:relative; top:0; left:0;}
+   #callout-icon {display:block; position:absolute; top:-11px; left:-11px;}
+   #callout-icon-flag {display:block; position:absolute; top:-11px; left:-8px;}
+   #callout-table a {text-decoration: none; color: blue;}
+   #callout-table a:visited {text-decoration: none; color: blue;}
+   #overview-table a {text-decoration: none; color: black;}
+   #overview-table a:visited {text-decoration: none; color: black;}
+   #callout-table a:hover, #overview-table a:hover {text-decoration: underline;}
+   </style>
+   
+<style TYPE="text/css" MEDIA="print">
+<!--
+/* Hide navigation links and add space between header
+     and text in the printed version. Not valid for eBooks. */
+#idnav { display:none;	 }
+.topichead { padding: 5px 5px 20px 5px; }
+-->
+</style>   
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <script type="text/javascript">
+     HMSyncTOC("index.html", "auto-import.htm");
+   </script>
+   <script type="text/javascript" src="highlight.js"></script>
+   <script type="text/javascript">
+     $(document).ready(function(){highlight();});
+   </script>
+</head>
+<body>
+<!--ZOOMSTOP-->
+
+<div id="idheader">
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0px;">
+  <tr>
+    <td align="left" class="topichead">
+      <p class="crumbs" id="idnav">
+        <a href="recipients_-_managing_customer.htm">Empfänger - Kundendaten pflegen</a> &gt; <a href="import_function_for_recipient_.htm">Importfunktion für Empfängerdaten</a>&nbsp;&gt;&nbsp;Auto-Import    
+      </p>
+    </td>
+    <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
+        
+        
+          <a href="importing_the_csv-file.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
+          </a>
+        
+        
+        <a href="import_function_for_recipient_.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
+        </a>
+        
+          <a href="creating_a_csv-file.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <img name=next src="btn_next_n.gif" border=0 alt="Next page">
+          </a>
+        
+        
+    </td -->
+  </tr>
+</table>
+
+<!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
+  
+
+</div>  
+
+
+
+<div id="idcontent">
+  <div id="innerdiv"> 
+  <h3 class="p_Heading3"><span class="f_Heading3">Auto-Import</span></h3>
+
+  <!--ZOOMRESTART-->
+  <p>Eine CSV-Datei mit Empfängerdaten, die auf einem Server gespeichert ist, lässt sich automatisch in den OpenEMM importieren. Dazu müssen Sie einen Auto-Import erstellen. Wählen Sie in der Navigationsleiste unter <span style="font-weight: bold; color: #006fb9;">Empfänger</span> die Rubrik <span style="font-weight: bold; color: #006fb9;">Auto-Import</span> aus und wechseln Sie zum Reiter <span style="font-weight: bold; color: #006fb9;">Neuer Auto-Import</span>. Nach Vergabe von <span style="font-weight: bold; color: #006fb9;">Name</span> und <span style="font-weight: bold; color: #006fb9;">Beschreibung</span> können Sie ein <span style="font-weight: bold; color: #006fb9;">Importprofil</span> auswählen, das zuvor unter <span style="font-weight: bold; color: #006fb9;">Empfänger</span>, <span style="font-weight: bold; color: #006fb9;">Import</span> gespeichert wurde (siehe Kapitel <a href="creating_a_new_import_profile.htm" class="topiclink">Neues Importprofil erstellen</a>). Anschließend teilen Sie dem OpenEMM den <span style="font-weight: bold; color: #006fb9;">Dateiserver</span> und den <span style="font-weight: bold; color: #006fb9;">Dateipfad</span> für die zu importierenden Empfängerdaten mit.</p>
+<p>Achten Sie dabei auf die korrekte Schreibweise. Der Dateiserver muss nach folgender Syntax eingegeben werden:</p>
+<p class="p_BeispieltextQuelltext"><span class="f_BeispieltextQuelltext">benutzername:passwort@domain</span></p>
+<p>Für den Dateipfad geben Sie das komplette Server-Verzeichnis samt Dateiname an, beispielsweise:</p>
+<p class="p_BeispieltextQuelltext"><span class="f_BeispieltextQuelltext">/home/user/datei.csv</span></p>
+<p>Wollen Sie den Import ein einziges Mal durchführen, setzen Sie ein Häkchen bei <span style="font-weight: bold; color: #006fb9;">nur einmalige Ausführung</span>. Ein Häkchen bei <span style="font-weight: bold; color: #006fb9;">Fehlerhafte Daten überspringen</span> veranlasst den OpenEMM, den Import auch dann durchzuführen, wenn Fehler in den Daten vorliegen. Andernfalls wird er abgebrochen.</p>
+<p>Nun legen Sie noch den Tag und die Uhrzeit fest, an dem der Import starten soll, sowie die <span style="font-weight: bold; color: #006fb9;">Mailing-Listen</span>, auf welchen Sie die Empfängerdaten aktiv setzen wollen. Hier ist auch eine Mehrfachauswahl möglich – Sie können den Import theoretisch an jedem Tag zu einer bestimmten Uhrzeit durchführen lassen, sowie mehrere Mailinglisten für die importierten Empfängerdaten auswählen. Haben Sie Ihre Auswahl getroffen, übernehmen Sie die Einstellungen mit einem Klick auf <span style="font-weight: bold; color: #006fb9;">Speichern</span>. </p>
+<p>Nun erscheinen neben dem <span style="font-weight: bold; color: #006fb9;">Speichern</span>-Button neue Schaltflächen. Nach einem Klick auf <span style="font-weight: bold; color: #006fb9;">Aktivieren</span> wird der Auto-Import zum eingestellten Zeitpunkt ausgeführt, während <span style="font-weight: bold; color: #006fb9;">Deaktivieren</span> den Auto-Import wieder stoppt. Mit einem Klick auf<span style="font-weight: bold; color: #006fb9;"> Empfänger importieren</span> führt der OpenEMM den Export sofort einmalig durch. Nach jedem Import erhält der im Importprofil angegebene User eine Zusammenfassung per E-Mail.</p>
+<div class="p_ImageCaption"><div style="margin:0px auto 0px auto;width:938px;padding:0px 0px 0px 0px"><img src="der_auto-import_weist_empfaengerdaten.png" width="938" height="654" style="border:none" alt="Abb. 5.24: Der Auto-Import weist Empfängerdaten automatisch und zeitgesteuert einer oder mehreren Mailingslisten zu." title="Abb. 5.24: Der Auto-Import weist Empfängerdaten automatisch und zeitgesteuert einer oder mehreren Mailingslisten zu." /><p style="text-align:center"><span class="f_ImageCaption">Abb. 5.24: Der Auto-Import weist Empfängerdaten automatisch und zeitgesteuert einer oder mehreren Mailingslisten zu.</span></p></div></div>
+<p>Im Reiter <span style="font-weight: bold; color: #006fb9;">Übersicht</span> zeigt Ihnen der OpenEMM eine Liste aller angelegten Auto-Importe an, inklusive der vergebenen Beschreibung, dem Dateiserver sowie dem Status, der entweder auf <span style="font-weight: bold; color: #006fb9;">aktiv</span> oder <span style="font-weight: bold; color: #006fb9;">nicht aktiv</span> gesetzt sein kann. Mit einem Klick auf einen Listeneintrag können Sie das entsprechende Profil wie oben beschrieben bearbeiten. Benötigen Sie einen Auto-Import nicht mehr, können Sie ihn wahlweise im Reiter <span style="font-weight: bold; color: #006fb9;">Übersicht</span> durch Anklicken des Papierkorbsymbols löschen, oder in den Detaileinstellungen über die Schaltfläche <span style="font-weight: bold; color: #006fb9;">Löschen</span>.</p>
+
+  <!--ZOOMSTOP-->
+  </div>
+</div>
+
+<script type="text/javascript"> 
+<!-- 
+var lastSlashPos = document.URL.lastIndexOf("/") >
+document.URL.lastIndexOf("\\") ? document.URL.lastIndexOf("/") :
+document.URL.lastIndexOf("\\");
+if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4
+).toLowerCase() != "~hh" )
+{
+    nsrInit();
+}
+--> 
+</script> 
+</body>
+</html>

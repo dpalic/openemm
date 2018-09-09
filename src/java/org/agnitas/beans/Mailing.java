@@ -429,9 +429,9 @@ public interface Mailing extends java.io.Serializable, MailingBase {
     /**
      * Search for all dependency
      */
-    public boolean buildDependencies(boolean scanDynTags, ApplicationContext con) throws Exception;
+    public boolean buildDependencies(boolean scanDynTags, ApplicationContext con, boolean cleanupComponents) throws Exception;
     
-    public boolean buildDependencies(boolean scanDynTags, List<String> dynNamesForDeletion, ApplicationContext con) throws Exception;
+    public boolean buildDependencies(boolean scanDynTags, List<String> dynNamesForDeletion, ApplicationContext con, boolean cleanupComponents) throws Exception;
 
     /**
      * Getter for property maildropStatus.

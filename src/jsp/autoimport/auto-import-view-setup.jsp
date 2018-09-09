@@ -21,4 +21,4 @@
     <c:set var="agnNavHrefAppend" value="&autoImportId=${autoImportForm.autoImportId}" scope="request" />
 </logic:notEqual>
 
-<c:set var="agnHelpKey" value="dashboard" scope="request" />
+<c:set var="agnHelpKey" value="autoImport" scope="request" />

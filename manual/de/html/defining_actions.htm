@@ -1,8 +1,7 @@
-﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+﻿<!DOCTYPE HTML>
 <html>
-<!-- saved from url=(0029)http://www.helpandmanual.com/ -->
 <head>
-   <title>Formulare &amp; Aktionen &gt; Kundenprofile pflegen mit Aktionen &gt; Aktionen definieren</title>
+   <title>Sites &amp; Actions &gt; Kundenprofile pflegen mit Aktionen &gt; Aktionen definieren</title>
    <meta name="generator" content="Help & Manual">
    <meta name="keywords" content="">
    <meta name="description" content="Aktionen definieren">
@@ -74,19 +73,19 @@ function toggleToggles() {
 .topichead { padding: 5px 5px 20px 5px; }
 -->
 </style>   
-<script type="text/javascript" src="helpman_topicinit.js"></script>
-<!-- Redirect browser to frame page if page is not in the content frame. -->
-<script type="text/javascript">
-<!--
-if (location.search.lastIndexOf("toc=0")<=0) {
-  if (parent.frames.length==0) { parent.location.href="index.html?defining_actions.htm"; }
-  else { parent.quicksync('a8.2.3'); }
-}
-//-->
-</script>
-<script type="text/javascript" src="highlight.js"></script></head>
-<body onload="highlight();">
-<div id="hmpopupDiv" style="visibility:hidden; position:absolute; z-index:1000; "></div>
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <script type="text/javascript">
+     HMSyncTOC("index.html", "defining_actions.htm");
+   </script>
+   <script type="text/javascript" src="highlight.js"></script>
+   <script type="text/javascript">
+     $(document).ready(function(){highlight();});
+   </script>
+</head>
+<body>
 <!--ZOOMSTOP-->
 
 <div id="idheader">
@@ -94,7 +93,7 @@ if (location.search.lastIndexOf("toc=0")<=0) {
   <tr>
     <td align="left" class="topichead">
       <p class="crumbs" id="idnav">
-        <a href="sites__actions.htm">Formulare &amp; Aktionen</a> &gt; <a href="maintain_recipients_profile_wi.htm">Kundenprofile pflegen mit Aktionen</a>&nbsp;&gt;&nbsp;Aktionen definieren    
+        <a href="sites__actions.htm">Sites &amp; Actions</a> &gt; <a href="maintain_recipients_profile_wi.htm">Kundenprofile pflegen mit Aktionen</a>&nbsp;&gt;&nbsp;Aktionen definieren    
       </p>
     </td>
     <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
@@ -127,7 +126,7 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 <div id="idcontent">
   <div id="innerdiv"> 
-  <p class="p_Heading3"><span class="f_Heading3">Aktionen definieren</span></p>
+  <h3 class="p_Heading3"><span class="f_Heading3">Aktionen definieren</span></h3>
 
   <!--ZOOMRESTART-->
   <p>Eine Aktion dient dazu, auf Mausklicks der Mailing-Empfänger zu reagieren. Die Reaktion kann zum Beispiel ein Feld im Empfängerprofil verändern, etwa den Wert eines numerischen Feldes um <span style="font-style: italic;">1</span> erhöhen. Alternativ löst die Aktion den Versand eines Mailings aus. Oder Sie kombinieren mehrere Schritte in einer Aktion. Das Kapitel trennt aber der Übersichtlichkeit halber die Veränderung von Empfängerprofilen und den Versand eines Mailings.</p>

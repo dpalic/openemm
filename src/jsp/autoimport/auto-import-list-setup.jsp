@@ -12,4 +12,4 @@
 <c:set var="agnSubtitleKey" value="autoImport.autoImport" scope="request" />
 <c:set var="agnNavigationKey" value="AutoImport" scope="request" />
 <c:set var="agnHighlightKey" value="default.Overview" scope="request" />
-<c:set var="agnHelpKey" value="dashboard" scope="request" />
+<c:set var="agnHelpKey" value="autoImport" scope="request" />
